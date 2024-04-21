@@ -116,6 +116,7 @@ describe("BigTwoLogicFunctions", () => {
             expect(BigTwoLogics.isFullHouse([Spade3, Spade3, Club3, Spade2, Heart2])).toBe(false)
         })
     })
+
     describe("isFourOfAKind", () => {
         it ("should return true if five cards can form a Four of a Kind", () => {
             expect(BigTwoLogics.isFourOfAKind([Spade3, Heart3, Club3, Diamond3, Heart2])).toBe(true)
@@ -130,6 +131,7 @@ describe("BigTwoLogicFunctions", () => {
             expect(BigTwoLogics.isFourOfAKind([Spade3, Spade3, Club3, Diamond3, Heart2])).toBe(false)
         })
     })
+
     describe("isStraightFlush", () => {
         it ("should return true if the hand is 3, 4, 5, 6, 7 with same suit without sorted", () => {
             expect(BigTwoLogics.isStraightFlush([Spade6, Spade5, Spade3, Spade4, Spade7])).toBe(true)
@@ -145,6 +147,21 @@ describe("BigTwoLogicFunctions", () => {
         })
         it ("should return false if five cards cannot form a Straight Flush", () => {
             expect(BigTwoLogics.isStraightFlush([Spade3, Spade4, Spade5, Spade6, SpadeA])).toBe(false)
+        })
+    })
+
+    describe("hasAtDuplicatedCards", () => {
+        it ("should return true if a 2-card-hand has 2 duplicated cards", () => {
+            expect(BigTwoLogics.hasDuplicatedCards([Spade3, Spade3])).toBe(true)
+        })
+        it ("should return true if a 3-card-hand has 2 duplicated cards", () => {
+            expect(BigTwoLogics.hasDuplicatedCards([Spade3, Spade3, Spade4])).toBe(true)
+        })
+        it ("should return false if the hand has only one card", () => {
+            expect(BigTwoLogics.hasDuplicatedCards([Spade3])).toBe(false)
+        })
+        it ("should return false if the hand has no duplicated cards", () => {
+            expect(BigTwoLogics.hasDuplicatedCards([Spade3, Spade4])).toBe(false)
         })
     })
 })
