@@ -150,7 +150,7 @@ describe("BigTwoLogicFunctions", () => {
         })
     })
 
-    describe("hasAtDuplicatedCards", () => {
+    describe("hasDuplicatedCards", () => {
         it ("should return true if a 2-card-hand has 2 duplicated cards", () => {
             expect(BigTwoLogics.hasDuplicatedCards([Spade3, Spade3])).toBe(true)
         })
