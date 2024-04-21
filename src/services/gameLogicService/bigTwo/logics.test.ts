@@ -43,6 +43,9 @@ describe("BigTwoLogicFunctions", () => {
         it("should return false if not all two cards have the same rank", () => {
             expect(BigTwoLogics.isPair([Spade3, Spade4])).toBe(false)
         })
+        it("should return false if at least two cards are same", () => {
+            expect(BigTwoLogics.isPair([Spade3, Spade3])).toBe(false)
+        })
     });
 
     describe("isTriple", () => {
@@ -54,6 +57,9 @@ describe("BigTwoLogicFunctions", () => {
         })
         it("should return false if not all three cards have the same rank", () => {
             expect(BigTwoLogics.isTriple([Spade3, Heart3, Spade4])).toBe(false)
+        })
+        it("should return false if at least two cards are same", () => {
+            expect(BigTwoLogics.isTriple([Spade3, Spade3, Heart3])).toBe(false)
         })
     });
 
@@ -91,6 +97,9 @@ describe("BigTwoLogicFunctions", () => {
         it ("should return false if five cards can form a StraightFlush", () => {
             expect(BigTwoLogics.isFlush([Spade3, Spade4, Spade5, SpadeA, Spade2])).toBe(false)
         })
+        it("should return false if at least two cards are same", () => {
+            expect(BigTwoLogics.isFlush([Spade3, Spade3, Spade4, Spade6, Spade7])).toBe(false)
+        })
     })
 
     describe("isFullHouse", () => {
@@ -103,6 +112,9 @@ describe("BigTwoLogicFunctions", () => {
         it ("should return false if five cards cannot form a Full House", () => {
             expect(BigTwoLogics.isFullHouse([SpadeA, Heart3, Club3, Spade2, Heart2])).toBe(false)
         })
+        it("should return false if at least two cards are same", () => {
+            expect(BigTwoLogics.isFullHouse([Spade3, Spade3, Club3, Spade2, Heart2])).toBe(false)
+        })
     })
     describe("isFourOfAKind", () => {
         it ("should return true if five cards can form a Four of a Kind", () => {
@@ -113,6 +125,9 @@ describe("BigTwoLogicFunctions", () => {
         })
         it ("should return false if five cards cannot form a Four of a Kind", () => {
             expect(BigTwoLogics.isFourOfAKind([Spade3, Heart3, Club3, Spade2, Heart2])).toBe(false)
+        })
+        it("should return false if at least two cards are same", () => {
+            expect(BigTwoLogics.isFourOfAKind([Spade3, Spade3, Club3, Diamond3, Heart2])).toBe(false)
         })
     })
     describe("isStraightFlush", () => {
