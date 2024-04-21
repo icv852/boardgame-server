@@ -1,3 +1,5 @@
+import { Card } from "./types"
+
 function hasSameRank(cards: Card[]): boolean {
     return cards.every(card => card.rank === cards[0].rank)
 }
