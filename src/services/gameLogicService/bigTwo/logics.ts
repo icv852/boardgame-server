@@ -1,4 +1,6 @@
 import { Card } from "./types"
+import { Straights } from "./constants"
+import _ from "lodash"
 
 function hasSameRank(cards: Card[]): boolean {
     return cards.every(card => card.rank === cards[0].rank)
@@ -27,8 +29,8 @@ function isStraight(cards: Card[]): boolean {
     if (cards.length !== 5) {
         return false
     }
-    // TBD
-    return false
+    const cardRanks = new Set(cards.map(card => card.rank))
+    return Straights.filter(straight => _.isEqual(straight.hand, cardRanks)).length > 0
 }
 
 function isFlush() {}

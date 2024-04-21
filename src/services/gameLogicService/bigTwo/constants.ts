@@ -36,7 +36,7 @@ export enum FiveCardHand {
     StraightFlush
 }
 
-export const Straight: { hand: Set<CardRank>, pivot: CardRank, rank: number }[] = [
+export const Straights: { hand: Set<CardRank>, pivot: CardRank, rank: number }[] = [
     { hand: new Set([CardRank.Three, CardRank.Four, CardRank.Five, CardRank.Six, CardRank.Seven]), pivot: CardRank.Seven, rank: 1 },
     { hand: new Set([CardRank.Four, CardRank.Five, CardRank.Six, CardRank.Seven, CardRank.Eight]), pivot: CardRank.Eight, rank: 2 },
     { hand: new Set([CardRank.Five, CardRank.Six, CardRank.Seven, CardRank.Eight, CardRank.Nine]), pivot: CardRank.Nine, rank: 3 },
