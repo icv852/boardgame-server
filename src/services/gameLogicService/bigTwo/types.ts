@@ -1,16 +1,24 @@
-import { CardRank, CardSuit } from "./constants"
+import { Suit, Rank, Seat, ValidMove } from "./constants"
 
-export type Card = {
-    rank: CardRank,
-    suit: CardSuit
+interface Card {
+    suit: Suit,
+    rank: Rank
 }
 
-export type Single = [Card]
+interface Player {
+    seat: Seat,
+    score: Number,
+    hands: Card[]
+}
 
-export type Pair = [Card, Card]
+interface GameState {
+    players: Player[],
+    currentSeat: Seat,
+    leadingPlay: Card[]
+}
 
-export type Triple = [Card, Card, Card]
-
-export type FiveCardHand = [Card, Card, Card, Card, Card]
-
-export type Hand = Single | Pair | Triple | FiveCardHand
+interface Move {
+    player: Player,
+    type: ValidMove,
+    cards: Card[] | null
+}
