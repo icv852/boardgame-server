@@ -1,24 +1,32 @@
-import { Suit, Rank, Seat, ValidMove } from "./constants"
+import { Suit, Rank, Seat } from "./constants"
+import { Option } from "effect"
 
-interface Card {
+export interface Card {
     suit: Suit,
     rank: Rank
 }
 
-interface Player {
+export interface Player {
     seat: Seat,
-    score: Number,
+    score: number,
     hands: Card[]
 }
 
-interface GameState {
+export interface GameState {
     players: Player[],
     currentSeat: Seat,
-    leadingPlay: Card[]
+    leadingPlay: Option.Option<Play>
 }
 
-interface Move {
-    player: Player,
-    type: ValidMove,
-    cards: Card[] | null
+export interface Play {
+    type: "Play",
+    seat: Seat,
+    cards: Card[]
 }
+
+export interface Pass {
+    type: "Pass",
+    seat: Seat
+}
+
+export type Move = Play | Pass

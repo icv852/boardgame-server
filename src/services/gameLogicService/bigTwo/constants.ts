@@ -22,10 +22,10 @@ export enum Suit {
 }
 
 export enum Seat {
-    East = 1,
-    South,
+    North = 1,
     West,
-    North
+    South,
+    East
 }
 
 export enum FiveCardPlay {
@@ -34,12 +34,4 @@ export enum FiveCardPlay {
     FullHouse,
     FourOfAKind,
     StraightFlush
-}
-
-export enum ValidMove {
-    Single,
-    Pair,
-    Triple,
-    FiveCardPlay,
-    Pass
 }
