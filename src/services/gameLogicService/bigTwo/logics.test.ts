@@ -10,6 +10,7 @@ const Spade4: Card = { suit: Suit.Spade, rank: Rank.Four }
 const Spade5: Card = { suit: Suit.Spade, rank: Rank.Five }
 const Spade6: Card = { suit: Suit.Spade, rank: Rank.Six }
 const Spade7: Card = { suit: Suit.Spade, rank: Rank.Seven }
+const Spade8: Card = { suit: Suit.Spade, rank: Rank.Eight }
 const Heart2: Card = { suit: Suit.Heart, rank: Rank.Two }
 const Heart3: Card = { suit: Suit.Heart, rank: Rank.Three }
 const Club3: Card = { suit: Suit.Club, rank: Rank.Three }
@@ -83,5 +84,24 @@ describe("Big Two Logic Functions", () => {
         it("should return false if leading play not exists", () => expect(BigTwoLogics.isPassValid(gameState1)(passByEast)).toStrictEqual(false))
         it("should return false if the leading player passes", () => expect(BigTwoLogics.isPassValid({ players: players, currentSeat: Seat.East, leadingPlay: Option.some(playClub3ByEast) })(passByEast)).toStrictEqual(false))
         it("should return true if it's a valid pass", () => expect(BigTwoLogics.isPassValid(gameState2)({ type: "Pass", seat: Seat.South })).toStrictEqual(true))
+    })
+
+    describe("Card combinations", () => {
+        describe("Single/Pair/Triple", () => {
+            expect(BigTwoLogics.isSingle([Spade3])).toStrictEqual(true)
+            expect(BigTwoLogics.isSingle([Spade3, Heart3])).toStrictEqual(false)
+            expect(BigTwoLogics.isPair([Spade3, Heart3])).toStrictEqual(true)
+            expect(BigTwoLogics.isPair([Spade3, Spade4])).toStrictEqual(false)
+            expect(BigTwoLogics.isPair([Spade3])).toStrictEqual(false)
+            expect(BigTwoLogics.isTriple([Spade3, Heart3, Club3])).toStrictEqual(true)
+            expect(BigTwoLogics.isTriple([Spade4, Heart3, Club3])).toStrictEqual(false)
+            expect(BigTwoLogics.isTriple([Heart3, Club3])).toStrictEqual(false)
+        })
+        describe("Straight", () => {
+            expect(BigTwoLogics.isStraight([Heart3, Spade4, Spade5, Spade6, Spade7])).toStrictEqual(true)
+            expect(BigTwoLogics.isStraight([Spade2, Heart3, Spade4, Spade5, Spade6])).toStrictEqual(true)
+            expect(BigTwoLogics.isStraight([SpadeA, Spade2, Heart3, Spade4, Spade5])).toStrictEqual(true)
+            expect(BigTwoLogics.isStraight([Spade3, Spade4, Spade5, Spade6, Spade8])).toStrictEqual(false)
+        })
     })
 })
