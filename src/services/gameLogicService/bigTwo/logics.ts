@@ -1,7 +1,7 @@
-import { GameState, Move, Play, Pass, Card } from "./types"
+import { GameState, Move, Play, Pass, Card, Player } from "./types"
 import { Seat, Rank, Suit, ValidStraights, FiveCardPlay } from "./constants"
 import { areSetsEqual } from "../../../utils/helpers"
-import { Effect } from "effect"
+import { Effect, Option, pipe } from "effect"
 
 /**
 logics:
@@ -54,6 +54,8 @@ const isValidPlay = (cards: Card[]): boolean => isSingle(cards) || isPair(cards)
 
 // card comparisons
 // const haveSameNumberOfCards = (cardsA: Card[]) => (cardsB: Card[]): boolean => getNumberOfCards(cardsA) === getNumberOfCards(cardsB)
+const areSameCards = (a: Card) => (b: Card): boolean => getRankOfCard(a) === getRankOfCard(b) && getSuitOfCard(a) === getSuitOfCard(b)
+const isCardExistsInCards = (cards: Card[]) => (target: Card): boolean => cards.some(card => areSameCards(card)(target))
 const canCardABeatCardB = (a: Card) => (b: Card): boolean => getRankOfCard(a) > getRankOfCard(b) || (getRankOfCard(a) === getRankOfCard(b) && getSuitOfCard(a) > getSuitOfCard(b))
 const canSingleABeatSingleB = (a: Card[]) => (b: Card[]): boolean => canCardABeatCardB(getPivotFromCards(a))(getPivotFromCards(b))
 const canPairABeatPairB = (a: Card[]) => (b: Card[]): boolean => canCardABeatCardB(getPivotFromCards(a))(getPivotFromCards(b))
@@ -79,15 +81,87 @@ const canFiveCardABeatFiveCardB = (a: Card[]) => (b: Card[]): boolean => {
 
 // game state
 const getCurrentSeat = (gameState: GameState): Seat => gameState.currentSeat
+const getPlayers = (gameState: GameState): Player[] => gameState.players
+const getLeadingPlay = (gameState: GameState): Option.Option<Play> => gameState.leadingPlay
 const getSeatOfMove = (move: Move): Seat => move.seat
+const getCardsOfPlay = (play: Play): Card[] => play.cards
+const getSeatOfPlayer = (player: Player): Seat => player.seat
+const getHandsOfPlayer = (player: Player): Card[] => player.hands
+const getNextSeat = (seat: Seat): Seat => {
+    switch (seat) {
+        case Seat.North: return Seat.West
+        case Seat.West: return Seat.South
+        case Seat.South: return Seat.East
+        case Seat.East: return Seat.North
+    }
+}
+
+
 const isMoveByCurrentSeat = (gameState: GameState) => (move: Move): boolean => getCurrentSeat(gameState) === getSeatOfMove(move)
-const applyMove = (gameState: GameState) => (move: Move): Effect.Effect<GameState, Error> => {
-    if (isMoveByCurrentSeat(gameState)(move)) {
-        
+
+const isLeadingPlayExists = (gameState: GameState): boolean => Option.isSome(getLeadingPlay(gameState))
+const removeHandsByPlay = (play: Play) => (gameState: GameState): GameState => {
+    const updatedPlayers = getPlayers(gameState).map(player => {
+        if (getSeatOfPlayer(player) === getSeatOfMove(play)) {
+            return {
+                ...player,
+                hands: getHandsOfPlayer(player).filter(card => !isCardExistsInCards(getCardsOfPlay(play))(card))
+            }
+        } else {
+            return player
+        }
+    })
+    return {
+        ...gameState,
+        players: updatedPlayers,
+    }
+}
+const updateLeadingPlay = (play: Play) => (gameState: GameState): GameState => ({ ...gameState, leadingPlay: Option.some(play) })
+const clearLeadingPlay = (gameState: GameState): GameState => ({ ...gameState, leadingPlay: Option.none() })
+const assignCurrentSeatToNextPlayer = (gameState: GameState): GameState => ({ ...gameState, currentSeat: getNextSeat(getCurrentSeat(gameState)) })
+
+const makePass = (gameState: GameState): Effect.Effect<GameState, Error> => {
+    return isLeadingPlayExists(gameState) ? Effect.succeed(assignCurrentSeatToNextPlayer(gameState)) : Effect.fail(new Error("TBD"))
+}
+const makePlay = (gameState: GameState) => (play: Play): Effect.Effect<GameState, Error> => {
+    if (isValidPlay(getCardsOfPlay(play))) {
+        if (isLeadingPlayExists(gameState)) {
+
+        } else {
+            
+        }
     } else {
         return Effect.fail(new Error("TBD"))
     }
 }
+
+const applyMove = (gameState: GameState) => (move: Move): Effect.Effect<GameState, Error> => {
+    if (isMoveByCurrentSeat(gameState)(move)) {
+        switch (move.type) {
+            case "Pass": return makePass(gameState)
+            case "Play": return makePlay(gameState)(move)
+        }
+    } else {
+        return Effect.fail(new Error("TBD"))
+    }
+}
+
+/**
+logics:
+
+if current seat:
+    if pass:
+        if valid pass: apply move
+        else: error
+    if play:
+        if valid play:
+            if leadingPlay exists:
+                if can beat leadingPlay: apply move
+                else: error
+            else: apply move
+        else: error
+else: error
+*/
 
 // const canBeatLeadingSingle = (leadingSingle: Card[]) => (currentSingle: Card[]):boolean => 
 // const canBeatLeadingCards = (leadingCards: Card[]) => (cards: Card[]): boolean => {
