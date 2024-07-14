@@ -15,7 +15,8 @@ export interface Player {
 export interface GameState {
     players: Player[],
     currentSeat: Seat,
-    leadingPlay: Option.Option<Play>
+    leadingPlay: Option.Option<Play>,
+    winner: Option.Option<Seat>
 }
 
 export interface Play {

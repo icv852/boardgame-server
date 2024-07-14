@@ -1,6 +1,7 @@
 import { GameState, Move, Play, Pass, Card, Player } from "./types"
 import { Seat, Rank, Suit, ValidStraights, FiveCardPlay } from "./constants"
 import { areSetsEqual } from "../../../utils/helpers"
+import { GameLogicError } from "../../../utils/errors"
 import { Effect, Option, pipe } from "effect"
 
 /**
@@ -27,11 +28,8 @@ const getRankOfCard = (card: Card): Rank => card.rank
 const getSuitOfCard = (card: Card): Suit => card.suit
 const getNumberOfCards = (cards: Card[]): number => cards.length
 const getRanksOfCards = (cards: Card[]): Rank[] => cards.map(card => getRankOfCard(card))
-const getSuitsOfCards = (cards: Card[]): Suit[] => cards.map(card => getSuitOfCard(card))
 const getNumberOfDiffRanksInCards = (cards: Card[]): number => new Set(getRanksOfCards(cards)).size
 const getNumberOfCardsByRank = (cards: Card[]) => (rank: Rank): number => getNumberOfCards(cards.filter(card => getRankOfCard(card) === rank))
-const getBiggestRankFromCards = (cards: Card[]): Rank => getRanksOfCards(cards).reduce((prev, curr) => curr > prev ? curr : prev, Rank.Three)
-const getBiggestSuitFromCards = (cards: Card[]): Suit => getSuitsOfCards(cards).reduce((prev, curr) => curr > prev ? curr : prev, Suit.Diamond)
 const getPivotFromCards = (cards: Card[]): Card => cards.reduce((prev, curr) => canCardABeatCardB(prev)(curr) ? prev : curr, CardDiamondThree)
 const getFiveCardPlayRank = (cards: Card[]): FiveCardPlay => isStraight(cards) ? FiveCardPlay.Straight : isFlush(cards) ? FiveCardPlay.Flush : isFullHouse(cards) ? FiveCardPlay.FullHouse : isFourOfAKind(cards) ? FiveCardPlay.FourOfAKind : FiveCardPlay.StraightFlush
 const getStraightRank = (cards: Card[]): number => ValidStraights.filter(vs => areSetsEqual(vs.combination, new Set(getRanksOfCards(cards))))[0].rank
@@ -95,11 +93,19 @@ const getNextSeat = (seat: Seat): Seat => {
         case Seat.East: return Seat.North
     }
 }
-
+const getSeatWithEmptyHands = (gameState: GameState): Option.Option<Seat> => {
+    const playersWithEmptyHands = getPlayers(gameState).filter(player => isHandsEmpty(getHandsOfPlayer(player)))
+    return playersWithEmptyHands.length < 1 ? Option.none() : Option.some(getSeatOfPlayer(playersWithEmptyHands[0]))
+}
 
 const isMoveByCurrentSeat = (gameState: GameState) => (move: Move): boolean => getCurrentSeat(gameState) === getSeatOfMove(move)
-
 const isLeadingPlayExists = (gameState: GameState): boolean => Option.isSome(getLeadingPlay(gameState))
+const isPassingToLeadingPlayer = (pass: Pass) => (gameState: GameState): boolean => Option.match(getLeadingPlay(gameState), {
+    onNone: () => false,
+    onSome: (leadingPlay) => getSeatOfMove(leadingPlay) === getSeatOfMove(pass)
+})
+const isHandsEmpty = (hands: Card[]): boolean => hands.length < 1
+
 const removeHandsByPlay = (play: Play) => (gameState: GameState): GameState => {
     const updatedPlayers = getPlayers(gameState).map(player => {
         if (getSeatOfPlayer(player) === getSeatOfMove(play)) {
@@ -119,30 +125,58 @@ const removeHandsByPlay = (play: Play) => (gameState: GameState): GameState => {
 const updateLeadingPlay = (play: Play) => (gameState: GameState): GameState => ({ ...gameState, leadingPlay: Option.some(play) })
 const clearLeadingPlay = (gameState: GameState): GameState => ({ ...gameState, leadingPlay: Option.none() })
 const assignCurrentSeatToNextPlayer = (gameState: GameState): GameState => ({ ...gameState, currentSeat: getNextSeat(getCurrentSeat(gameState)) })
-
-const makePass = (gameState: GameState): Effect.Effect<GameState, Error> => {
-    return isLeadingPlayExists(gameState) ? Effect.succeed(assignCurrentSeatToNextPlayer(gameState)) : Effect.fail(new Error("TBD"))
+const updateWinner = (winnerSeat: Seat) => (gameState: GameState): GameState => ({ ...gameState, winner: Option.some(winnerSeat) })
+const updateScores = (gameState: GameState): GameState => gameState // TBD
+const settleIfWinnerExists = (gameState: GameState): GameState => {
+    return Option.match(getSeatWithEmptyHands(gameState), {
+        onNone: () => gameState,
+        onSome: (winnerSeat) => pipe(
+            gameState,
+            updateWinner(winnerSeat),
+            updateScores,
+        )
+    })
 }
-const makePlay = (gameState: GameState) => (play: Play): Effect.Effect<GameState, Error> => {
-    if (isValidPlay(getCardsOfPlay(play))) {
-        if (isLeadingPlayExists(gameState)) {
-
+const makePass = (pass: Pass) => (gameState: GameState): Effect.Effect<GameState, Error> => {
+    if (isLeadingPlayExists(gameState)) {
+        if (isPassingToLeadingPlayer(pass)(gameState)) {
+            return Effect.succeed(pipe(
+                gameState,
+                clearLeadingPlay,
+                assignCurrentSeatToNextPlayer
+            ))
         } else {
-            
+            return Effect.succeed(assignCurrentSeatToNextPlayer(gameState))
         }
     } else {
-        return Effect.fail(new Error("TBD"))
+        return Effect.fail(new GameLogicError("Cannot pass when leading play not exists."))
+    }
+}
+const makePlay = (play: Play) => (gameState: GameState): Effect.Effect<GameState, Error> => {
+    if (isValidPlay(getCardsOfPlay(play))) {
+        if (isLeadingPlayExists(gameState)) {
+            
+        } else {
+            return Effect.succeed(pipe(
+                gameState,
+                removeHandsByPlay(play),
+                updateLeadingPlay(play),
+                settleIfWinnerExists
+            ))
+        }
+    } else {
+        return Effect.fail(new GameLogicError("Invalid play."))
     }
 }
 
 const applyMove = (gameState: GameState) => (move: Move): Effect.Effect<GameState, Error> => {
     if (isMoveByCurrentSeat(gameState)(move)) {
         switch (move.type) {
-            case "Pass": return makePass(gameState)
-            case "Play": return makePlay(gameState)(move)
+            case "Pass": return makePass(pass)(gameState)
+            case "Play": return makePlay(play)(gameState)
         }
     } else {
-        return Effect.fail(new Error("TBD"))
+        return Effect.fail(new GameLogicError("The move is not requested by current seat."))
     }
 }
 
