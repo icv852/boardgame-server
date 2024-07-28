@@ -3,7 +3,6 @@ import { Seat, Rank, Suit, ValidStraights, FiveCardPlay } from "./constants"
 import { areSetsEqual } from "../../../utils/helpers"
 import { GameLogicError } from "../../../utils/errors"
 import { Effect, Option, pipe } from "effect"
-
 /**
 logics:
 
