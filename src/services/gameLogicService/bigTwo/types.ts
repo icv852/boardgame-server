@@ -1,7 +1,7 @@
 import { Suit, Rank, Seat } from "./constants"
 import { Option } from "effect"
 import { GameLogicError } from "../../../utils/errors"
-import { getPivotFromCards, haveSameRanks, haveSameSuits, getStraightRank, getNumberOfDiffRanksInCards } from "./helpers"
+import { getPivotFromCards, haveSameRanks, haveSameSuits, getStraightRank, getNumberOfDiffRanksInCards, getRankByAppearedTimes } from "./helpers"
 
 export interface Card {
     suit: Suit,
@@ -33,8 +33,6 @@ export interface Pass {
 }
 
 export type Move = Play | Pass
-
-
 
 export class Single {
     card: Card
@@ -75,12 +73,12 @@ export class Triple {
 
 export class Straight {
     cards: Card[]
-    rankOfCombination: number
+    rank: number
     constructor(cards: Card[]) {
         const matchedRank = Option.getOrNull(getStraightRank(cards))
-        if (matchedRank && !haveSameSuits(cards)) {
+        if (cards.length === 5 && matchedRank && !haveSameSuits(cards)) {
             this.cards = cards
-            this.rankOfCombination = matchedRank
+            this.rank = matchedRank
         } else {
             throw new GameLogicError("Invalid Staright formation.")
         }
@@ -102,7 +100,42 @@ export class Flush {
 
 export class FullHouse {
     cards: Card[]
+    rank: number
     constructor(cards: Card[]) {
-        if (cards.length === 5 && getNumberOfDiffRanksInCards(cards) === 2)
+        const rankAppeared3Times = Option.getOrNull(getRankByAppearedTimes(3)(cards))
+        if (cards.length === 5 && getNumberOfDiffRanksInCards(cards) === 2 && rankAppeared3Times) {
+            this.cards = cards
+            this.rank = rankAppeared3Times
+        } else {
+            throw new GameLogicError("Invalid Full House formation.")
+        }
+    }
+}
+
+export class FourOfAKind {
+    cards: Card[]
+    rank: number
+    constructor(cards: Card[]) {
+        const rankAppeared4Times = Option.getOrNull(getRankByAppearedTimes(4)(cards))
+        if (cards.length === 5 && getNumberOfDiffRanksInCards(cards) === 2 && rankAppeared4Times) {
+            this.cards = cards
+            this.rank = rankAppeared4Times
+        } else {
+            throw new GameLogicError("Invalid Four of a Kind formation.")
+        }
+    }
+}
+
+export class StraightFlush {
+    cards: Card[]
+    rank: number
+    constructor(cards: Card[]) {
+        const matchedRank = Option.getOrNull(getStraightRank(cards))
+        if (cards.length === 5 && matchedRank && haveSameSuits(cards)) {
+            this.cards = cards
+            this.rank = matchedRank
+        } else {
+            throw new GameLogicError("Invalid Straight Flush formation.")
+        }
     }
 }

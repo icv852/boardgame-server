@@ -16,8 +16,14 @@ const canCardABeatCardB = (a: Card) => (b: Card): boolean => a.rank > b.rank || 
 export const getPivotFromCards = (cards: Card[]): Card => cards.reduce((prev, curr) => canCardABeatCardB(prev)(curr) ? prev : curr, CardDiamondThree)
 
 export const getStraightRank = (cards: Card[]): Option.Option<number> => {
-    const matchedValidStraight = ValidStraights.filter(vs => areSetsEqual(vs.combination, new Set(cards.map(card => card.rank))))[0]
+    const matchedValidStraight = ValidStraights.filter(vs => areSetsEqual(vs.combination, new Set(cards.map(card => card.rank)))).pop()
     return matchedValidStraight ? Option.some(matchedValidStraight.rank) : Option.none()
 }
 
 export const getNumberOfDiffRanksInCards = (cards: Card[]): number => new Set(cards.map(card => card.rank)).size
+
+export const getRankByAppearedTimes = (times: number) => (cards: Card[]): Option.Option<Rank> => {
+    const appearedRanks = Array.from(new Set(cards.map(card => card.rank)))
+    const found = appearedRanks.filter(appearedRank => cards.filter(card => card.rank === appearedRank).length === times).pop()
+    return found ? Option.some(found) : Option.none()
+}
