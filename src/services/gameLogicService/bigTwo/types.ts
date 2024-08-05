@@ -21,16 +21,16 @@ export interface GameState {
     winner: Option.Option<Seat>
 }
 
-export interface Play {
-    type: "Play",
-    seat: Seat,
-    cards: Card[]
-}
+// export interface Play {
+//     type: "Play",
+//     seat: Seat,
+//     cards: Card[]
+// }
 
-export interface Pass {
-    type: "Pass",
-    seat: Seat
-}
+// export interface Pass {
+//     type: "Pass",
+//     seat: Seat
+// }
 
 export type Move = Play | Pass
 
@@ -137,5 +137,40 @@ export class StraightFlush {
         } else {
             throw new GameLogicError("Invalid Straight Flush formation.")
         }
+    }
+}
+
+type PlayType = Single | Pair | Triple | Straight | Flush | FullHouse | FourOfAKind | StraightFlush
+
+export class Play {
+    type: PlayType
+    seat: Seat
+    cards: Card[]
+    constructor(cards: Card[], seat: Seat) {
+        const playConstructors = [Single, Pair, Triple, Straight, Flush, FullHouse, FourOfAKind, StraightFlush]
+        let validPlayConstructed = false
+        for (const playConstructor of playConstructors) {
+            try {
+                this.type = new playConstructor(cards)
+                this.cards = cards
+                this.seat = seat
+                validPlayConstructed = true
+                break
+            } catch (e) {
+                if (!(e instanceof GameLogicError)) {
+                    throw e
+                }
+            }
+        }
+        if (!validPlayConstructed) {
+            throw new GameLogicError("Invalid card combination to make a play.")
+        }
+    }
+}
+
+export class Pass {
+    seat: Seat
+    constructor(seat: Seat) {
+        this.seat = seat
     }
 }

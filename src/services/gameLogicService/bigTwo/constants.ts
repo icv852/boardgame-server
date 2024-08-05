@@ -28,13 +28,13 @@ export enum Seat {
     East
 }
 
-export enum FiveCardPlay {
-    Straight = 1,
-    Flush,
-    FullHouse,
-    FourOfAKind,
-    StraightFlush
-}
+// export enum FiveCardPlay {
+//     Straight = 1,
+//     Flush,
+//     FullHouse,
+//     FourOfAKind,
+//     StraightFlush
+// }
 
 export const ValidStraights: { rank: number, combination: Set<Rank> }[] = [
     { rank: 1, combination: new Set([Rank.Three, Rank.Four, Rank.Five, Rank.Six, Rank.Seven]) },
