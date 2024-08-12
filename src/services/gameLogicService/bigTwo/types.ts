@@ -3,11 +3,6 @@ import { Option } from "effect"
 import { GameLogicError } from "../../../utils/errors"
 // import { getPivotFromCards, haveSameRanks, haveSameSuits, getStraightRank, getNumberOfDiffRanksInCards, getRankByAppearedTimes } from "./logics/cardLogics"
 
-// export interface Card {
-//     suit: Suit,
-//     rank: Rank
-// }
-
 export enum SuitValue {
     Diamond = 0,
     Club,
@@ -37,6 +32,7 @@ export class Suit {
     constructor(value: SuitValue) {
         this.value = value
     }
+
     get next(): Option.Option<Suit> {
         return this.value === SuitValue.Spade ? Option.none() : Option.some(new Suit(this.value + 1))
     }
@@ -52,7 +48,6 @@ export class Rank {
         return this.value === RankValue.Two ? Option.none() : Option.some(new Rank(this.value + 1))
     }
 }
-
 export class Card {
     readonly suit: Suit
     readonly rank: Rank
@@ -61,6 +56,7 @@ export class Card {
         this.suit = suit
         this.rank = rank
     }
+    
     get next(): Option.Option<Card> {
         if (Option.isSome(this.rank.next)) {
             return Option.some(new Card(this.suit, Option.getOrThrow(this.rank.next)))
@@ -70,17 +66,79 @@ export class Card {
             return Option.none()
         }
     }
+
+    canBeat(card: Card): boolean {
+        return this.rank.value > card.rank.value || (this.rank.value === card.rank.value && this.suit.value > card.suit.value)
+    }
+
+    existsIn(cards: Card[]): boolean {
+        return cards.filter(card => this.rank.value === card.rank.value && this.suit.value === card.suit.value).length > 0
+    }
+
+    static haveSameRanks(cards: Card[]): boolean {
+        return cards.every(card => card.rank.value === cards[0].rank.value)
+    }
+
+    static getBiggest(cards: Card[]): Card {
+        return cards.reduce((prev, curr) => curr.canBeat(prev) ? curr : prev, new Card(new Suit(SuitValue.Diamond), new Rank(RankValue.Three)))
+    }
+
+    static sort(cards: Card[]): Card[] {
+        return cards.sort((a, b) => a.canBeat(b) ? 1 : -1)
+    }
 }
 
-// class Pair {
-//     constructor(cards: Card[]) {
-//         if (cards.length === 2 && haveSameRanks(cards)) {
-//             this.cards = cards
-//             this.pivot = getPivotFromCards(cards)
-//         } else {
-//             throw new GameLogicError("Invalid Pair formation.")
-//         }
-//     }
+class Pair {
+    readonly pivot: Card
+    constructor(cards: Card[]) {
+        if (cards.length === 2 && Card.haveSameRanks(cards)) {
+            this.pivot = Card.getBiggest(cards)
+        } else {
+            throw new GameLogicError("Invalid Pair formation.")
+        }
+    }
+
+    canBeat(pair: Pair): boolean {
+        return this.pivot.canBeat(pair.pivot)
+    }
+}
+
+class Triple {
+    readonly pivot: Card
+    constructor(cards: Card[]) {
+        if (cards.length === 3 && Card.haveSameRanks(cards)) {
+            this.pivot = Card.getBiggest(cards)
+        } else {
+            throw new GameLogicError("Invalid Triple formation.")
+        }
+    }
+
+    canBeat(triple: Triple): boolean {
+        return this.pivot.canBeat(triple.pivot)
+    }
+}
+
+class Straight {
+    constructor(cards: Card[]) {
+        if (cards.length === 5) {
+            const sortedCards = Card.sort(cards)
+            const sortedRanks = sortedCards.map(card => card.rank)
+        } 
+        throw new GameLogicError("Invalid Straight formation.")
+    }        
+}
+
+    // cards: Card[]
+    // rank: number
+    // constructor(cards: Card[]) {
+    //     const matchedRank = Option.getOrNull(getStraightRank(cards))
+    //     if (cards.length === 5 && matchedRank && !haveSameSuits(cards)) {
+    //         this.cards = cards
+    //         this.rank = matchedRank
+    //     } else {
+    //         throw new GameLogicError("Invalid Staright formation.")
+    //     }
+    // }
 // }
 
 //     get next() {
