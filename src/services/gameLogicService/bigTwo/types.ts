@@ -1,8 +1,6 @@
 // import { Suit, Rank, Seat } from "./constants"
 import { Option } from "effect"
 import { GameLogicError } from "../../../utils/errors"
-// import { getPivotFromCards, haveSameRanks, haveSameSuits, getStraightRank, getNumberOfDiffRanksInCards, getRankByAppearedTimes } from "./logics/cardLogics"
-
 export enum SuitValue {
     Diamond = 0,
     Club,
@@ -35,10 +33,6 @@ export class Suit {
 
     get next(): Option.Option<Suit> {
         return this.value === SuitValue.Spade ? Option.none() : Option.some(new Suit(this.value + 1))
-    }
-
-    static haveSameSuit(cards: Card[]) {
-        return cards.every(card => card.suit.value === cards[0].suit.value)
     }
 }
 
@@ -80,8 +74,12 @@ export class Card {
         return cards.filter(card => this.rank.value === card.rank.value && this.suit.value === card.suit.value).length > 0
     }
 
-    static haveSameRanks(cards: Card[]): boolean {
+    static haveSameRank(cards: Card[]): boolean {
         return cards.every(card => card.rank.value === cards[0].rank.value)
+    }
+
+    static haveSameSuit(cards: Card[]): boolean {
+        return cards.every(card => card.suit.value === cards[0].suit.value)
     }
 
     static getBiggest(cards: Card[]): Card {
@@ -96,7 +94,7 @@ export class Card {
 class Pair {
     readonly pivot: Card
     constructor(cards: Card[]) {
-        if (cards.length === 2 && Card.haveSameRanks(cards)) {
+        if (cards.length === 2 && Card.haveSameRank(cards)) {
             this.pivot = Card.getBiggest(cards)
         } else {
             throw new GameLogicError("Invalid Pair formation.")
@@ -111,7 +109,7 @@ class Pair {
 class Triple {
     readonly pivot: Card
     constructor(cards: Card[]) {
-        if (cards.length === 3 && Card.haveSameRanks(cards)) {
+        if (cards.length === 3 && Card.haveSameRank(cards)) {
             this.pivot = Card.getBiggest(cards)
         } else {
             throw new GameLogicError("Invalid Triple formation.")
@@ -127,7 +125,7 @@ class Straight {
     readonly pivot: Card
     readonly isA2Straight: boolean
     constructor(cards: Card[]) {
-        if (cards.length === 5 && !Suit.haveSameSuit(cards)) {
+        if (cards.length === 5 && !Card.haveSameSuit(cards)) {
             const sortedCards = Card.sort(cards)
             const sortedRanks = sortedCards.map(card => card.rank)
             if (this.isAceToFive(sortedRanks)) {
@@ -182,6 +180,22 @@ class Flush {
     }
     public canBeat(flush: Flush) {
         return this.pivot.canBeat(flush.pivot)
+    }
+}
+
+class FullHouse {
+    readonly pivot: Card
+    constructor(cards: Card[]) {
+        if (cards.length === 5) {
+            const sortedCards = Card.sort(cards)
+            const first3Cards = sortedCards.slice(0, 3)
+            const last3Cards = sortedCards.slice(-3)
+            if (Rank.haveSameRank(cards)) {
+                    
+            }
+        } else {
+            throw new GameLogicError("Invalid Full House formation.")
+        }
     }
 }
 
