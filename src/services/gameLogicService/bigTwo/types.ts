@@ -67,11 +67,11 @@ export class Card {
         }
     }
 
-    canBeat(card: Card): boolean {
+    public canBeat(card: Card): boolean {
         return this.rank.value > card.rank.value || (this.rank.value === card.rank.value && this.suit.value > card.suit.value)
     }
 
-    existsIn(cards: Card[]): boolean {
+    public existsIn(cards: Card[]): boolean {
         return cards.filter(card => this.rank.value === card.rank.value && this.suit.value === card.suit.value).length > 0
     }
 
@@ -98,7 +98,7 @@ class Pair {
         }
     }
 
-    canBeat(pair: Pair): boolean {
+    public canBeat(pair: Pair): boolean {
         return this.pivot.canBeat(pair.pivot)
     }
 }
@@ -113,19 +113,53 @@ class Triple {
         }
     }
 
-    canBeat(triple: Triple): boolean {
+    public canBeat(triple: Triple): boolean {
         return this.pivot.canBeat(triple.pivot)
     }
 }
 
 class Straight {
+    readonly pivot: Card
+    readonly isA2Straight: boolean
     constructor(cards: Card[]) {
         if (cards.length === 5) {
             const sortedCards = Card.sort(cards)
             const sortedRanks = sortedCards.map(card => card.rank)
-        } 
-        throw new GameLogicError("Invalid Straight formation.")
-    }        
+            if (this.isAceToFive(sortedRanks)) {
+                this.pivot = sortedCards[4]
+                this.isA2Straight = true
+            } else if (this.isTwoToSix || this.isRegularStraight) {
+                this.pivot = sortedCards[4]
+                this.isA2Straight = false
+            } else {
+                throw new GameLogicError("Invalid Straight formation.")
+            }
+        } else {
+            throw new GameLogicError("Invalid Straight formation.")
+        }
+    }
+
+    public canBeat(straight: Straight): boolean {
+        if (this.isA2Straight !== straight.isA2Straight) {
+            return this.isA2Straight
+        } else {
+            return this.pivot.canBeat(straight.pivot)
+        }
+    }
+
+    private isAceToFive(ranks: Rank[]): boolean {
+        const aceToFive = [RankValue.Three, RankValue.Four, RankValue.Five, RankValue.Ace, RankValue.Two]
+        return ranks.every((rank, idx) => rank.value === aceToFive[idx])
+    }
+
+    private isTwoToSix(ranks: Rank[]): boolean {
+        const twoToSix = [RankValue.Three, RankValue.Four, RankValue.Five, RankValue.Ace, RankValue.Two]
+        return ranks.every((rank, idx) => rank.value === twoToSix[idx])
+    }
+
+    private isRegularStraight(ranks: Rank[]): boolean {
+        return ranks.every((rank, idx) => idx === 4 || rank.next.value === ranks[idx + 1].value)
+    }
 }
 
     // cards: Card[]
