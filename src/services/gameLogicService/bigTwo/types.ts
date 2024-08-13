@@ -128,10 +128,10 @@ class Straight {
         if (cards.length === 5 && !Card.haveSameSuit(cards)) {
             const sortedCards = Card.sort(cards)
             const sortedRanks = sortedCards.map(card => card.rank)
-            if (this.isAceToFive(sortedRanks)) {
+            if (Straight.isAceToFive(sortedRanks)) {
                 this.pivot = sortedCards[4]
                 this.isA2Straight = true
-            } else if (this.isTwoToSix || this.isRegularStraight) {
+            } else if (Straight.isTwoToSix || Straight.isRegularStraight) {
                 this.pivot = sortedCards[4]
                 this.isA2Straight = false
             } else {
@@ -154,25 +154,25 @@ class Straight {
         return this.isAceToFive(ranks) || this.isTwoToSix(ranks) || this.isRegularStraight(ranks)
     }
 
-    private isAceToFive(ranks: Rank[]): boolean {
+    private static isAceToFive(ranks: Rank[]): boolean {
         const aceToFive = [RankValue.Three, RankValue.Four, RankValue.Five, RankValue.Ace, RankValue.Two]
         return ranks.every((rank, idx) => rank.value === aceToFive[idx])
     }
 
-    private isTwoToSix(ranks: Rank[]): boolean {
+    private static isTwoToSix(ranks: Rank[]): boolean {
         const twoToSix = [RankValue.Three, RankValue.Four, RankValue.Five, RankValue.Ace, RankValue.Two]
         return ranks.every((rank, idx) => rank.value === twoToSix[idx])
     }
 
-    private isRegularStraight(ranks: Rank[]): boolean {
-        return ranks.every((rank, idx) => idx === 4 || rank.next.value === ranks[idx + 1].value)
+    private static isRegularStraight(ranks: Rank[]): boolean {
+        return ranks.every((rank, idx) => idx === 4 || Option.getOrNull(rank.next)?.value === ranks[idx + 1].value)
     }
 }
 
 class Flush {
     readonly pivot: Card
     constructor(cards: Card[]) {
-        if (cards.length === 5 && Suit.haveSameSuit(cards) && !Straight.haveStraightPattern(cards)) {
+        if (cards.length === 5 && Card.haveSameSuit(cards) && !Straight.haveStraightPattern(cards.map(card => card.rank))) {
             this.pivot = Card.getBiggest(cards)
         } else {
             throw new GameLogicError("Invalid Flush formation.")
@@ -190,7 +190,7 @@ class FullHouse {
             const sortedCards = Card.sort(cards)
             const first3Cards = sortedCards.slice(0, 3)
             const last3Cards = sortedCards.slice(-3)
-            if (Rank.haveSameRank(cards)) {
+            if (Card.haveSameRank(cards)) {
                     
             }
         } else {
