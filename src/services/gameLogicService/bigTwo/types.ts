@@ -42,6 +42,7 @@ export class Rank {
     constructor(value: RankValue) {
         this.value = value
     }
+
     get next(): Option.Option<Rank> {
         return this.value === RankValue.Two ? Option.none() : Option.some(new Rank(this.value + 1))
     }
@@ -124,6 +125,7 @@ class Triple {
 class Straight {
     readonly pivot: Card
     readonly isA2Straight: boolean
+
     constructor(cards: Card[]) {
         if (cards.length === 5 && !Card.haveSameSuit(cards)) {
             const sortedCards = Card.sort(cards)
@@ -171,6 +173,7 @@ class Straight {
 
 class Flush {
     readonly pivot: Card
+
     constructor(cards: Card[]) {
         if (cards.length === 5 && Card.haveSameSuit(cards) && !Straight.haveStraightPattern(cards.map(card => card.rank))) {
             this.pivot = Card.getBiggest(cards)
@@ -178,6 +181,7 @@ class Flush {
             throw new GameLogicError("Invalid Flush formation.")
         }
     }
+
     public canBeat(flush: Flush) {
         return this.pivot.canBeat(flush.pivot)
     }
@@ -185,16 +189,77 @@ class Flush {
 
 class FullHouse {
     readonly pivot: Card
+
     constructor(cards: Card[]) {
         if (cards.length === 5) {
             const sortedCards = Card.sort(cards)
             const first3Cards = sortedCards.slice(0, 3)
             const last3Cards = sortedCards.slice(-3)
-            if (Card.haveSameRank(cards)) {
-                    
+            if (Card.haveSameRank(first3Cards)) {
+                this.pivot = first3Cards.slice(-1)[0]
+            } else if (Card.haveSameRank(last3Cards)) {
+                this.pivot = last3Cards.slice(-1)[0]
+            } else {
+                throw new GameLogicError("Invalid Full House formation.")
             }
         } else {
             throw new GameLogicError("Invalid Full House formation.")
+        }
+    }
+
+    public canBeat(fullHouse: FullHouse) {
+        return this.pivot.canBeat(fullHouse.pivot)
+    }
+}
+
+class FourOfAKind {
+    readonly pivot: Card
+
+    constructor(cards: Card[]) {
+        if (cards.length === 5) {
+            const sortedCards = Card.sort(cards)
+            const first4Cards = sortedCards.slice(0, 4)
+            const last4Cards = sortedCards.slice(-4)
+            if (Card.haveSameRank(first4Cards)) {
+                this.pivot = first4Cards.slice(-1)[0]
+            } else if (Card.haveSameRank(last4Cards)) {
+                this.pivot = last4Cards.slice(-1)[0]
+            } else {
+                throw new GameLogicError("Invalid Four of a Kind formation.")
+            }
+        } else {
+            throw new GameLogicError("Invalid Four of a Kind formation.")
+        }
+    }
+
+    public canBeat(fourOfAKind: FullHouse) {
+        return this.pivot.canBeat(fourOfAKind.pivot)
+    }
+}
+
+class StraightFlush {
+    readonly pivot: Card
+    readonly isA2Straight: boolean
+
+    constructor(cards: Card[]) {
+        const cardRanks = cards.map(card => card.rank)
+        if (cards.length === 5 && Card.haveSameSuit(cards) && Straight.haveStraightPattern(cardRanks)) {
+            this.pivot = Card.getBiggest(cards)
+            if (cardRanks.includes(new Rank(RankValue.Ace)) && cardRanks.includes(new Rank(RankValue.Two))) {
+                this.isA2Straight = true
+            } else {
+                this.isA2Straight = false
+            }
+        } else {
+            throw new GameLogicError("Invalid Straight Flush formation.")
+        }
+    }
+
+    public canBeat(straightFlush: StraightFlush) {
+        if (this.isA2Straight !== straightFlush.isA2Straight) {
+            return this.isA2Straight
+        } else {
+            return this.pivot.canBeat(straightFlush.pivot)
         }
     }
 }
