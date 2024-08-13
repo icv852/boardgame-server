@@ -36,6 +36,10 @@ export class Suit {
     get next(): Option.Option<Suit> {
         return this.value === SuitValue.Spade ? Option.none() : Option.some(new Suit(this.value + 1))
     }
+
+    static haveSameSuit(cards: Card[]) {
+        return cards.every(card => card.suit.value === cards[0].suit.value)
+    }
 }
 
 export class Rank {
@@ -48,6 +52,7 @@ export class Rank {
         return this.value === RankValue.Two ? Option.none() : Option.some(new Rank(this.value + 1))
     }
 }
+
 export class Card {
     readonly suit: Suit
     readonly rank: Rank
@@ -122,7 +127,7 @@ class Straight {
     readonly pivot: Card
     readonly isA2Straight: boolean
     constructor(cards: Card[]) {
-        if (cards.length === 5) {
+        if (cards.length === 5 && !Suit.haveSameSuit(cards)) {
             const sortedCards = Card.sort(cards)
             const sortedRanks = sortedCards.map(card => card.rank)
             if (this.isAceToFive(sortedRanks)) {
@@ -147,6 +152,10 @@ class Straight {
         }
     }
 
+    static haveStraightPattern(ranks: Rank[]): boolean {
+        return this.isAceToFive(ranks) || this.isTwoToSix(ranks) || this.isRegularStraight(ranks)
+    }
+
     private isAceToFive(ranks: Rank[]): boolean {
         const aceToFive = [RankValue.Three, RankValue.Four, RankValue.Five, RankValue.Ace, RankValue.Two]
         return ranks.every((rank, idx) => rank.value === aceToFive[idx])
@@ -162,27 +171,21 @@ class Straight {
     }
 }
 
-    // cards: Card[]
-    // rank: number
-    // constructor(cards: Card[]) {
-    //     const matchedRank = Option.getOrNull(getStraightRank(cards))
-    //     if (cards.length === 5 && matchedRank && !haveSameSuits(cards)) {
-    //         this.cards = cards
-    //         this.rank = matchedRank
-    //     } else {
-    //         throw new GameLogicError("Invalid Staright formation.")
-    //     }
-    // }
-// }
+class Flush {
+    readonly pivot: Card
+    constructor(cards: Card[]) {
+        if (cards.length === 5 && Suit.haveSameSuit(cards) && !Straight.haveStraightPattern(cards)) {
+            this.pivot = Card.getBiggest(cards)
+        } else {
+            throw new GameLogicError("Invalid Flush formation.")
+        }
+    }
+    public canBeat(flush: Flush) {
+        return this.pivot.canBeat(flush.pivot)
+    }
+}
 
-//     get next() {
-//         if (this.suit === Suit.Spade) {
-//             return new Card(, this.rank.next)
-//         } else {
-//             return new Card(this.suit.next, this.rank)
-//         }
-//     }
-// }
+
 
 // export interface Player {
 //     seat: Seat,
