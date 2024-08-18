@@ -1,28 +1,7 @@
 // import { Suit, Rank, Seat } from "./constants"
 import { Option } from "effect"
 import { GameLogicError } from "../../../utils/errors"
-export enum SuitValue {
-    Diamond = 0,
-    Club,
-    Heart,
-    Spade
-}
-
-export enum RankValue {
-    Three = 0,
-    Four,
-    Five,
-    Six,
-    Seven,
-    Eight,
-    Nine,
-    Ten,
-    Jack,
-    Queen,
-    King,
-    Ace,
-    Two
-}
+import { SuitValue, RankValue, SeatPostion } from "./constants"
 
 export class Suit {
     readonly value: SuitValue
@@ -89,6 +68,17 @@ export class Card {
 
     static sort(cards: Card[]): Card[] {
         return cards.sort((a, b) => a.canBeat(b) ? 1 : -1)
+    }
+}
+
+class Single {
+    readonly card: Card
+    constructor(card: Card) {
+        this.card = card
+    }
+
+    public canBeat(single: Single): boolean {
+        return this.card.canBeat(single.card)
     }
 }
 
@@ -182,7 +172,7 @@ class Flush {
         }
     }
 
-    public canBeat(flush: Flush) {
+    public canBeat(flush: Flush): boolean {
         return this.pivot.canBeat(flush.pivot)
     }
 }
@@ -207,7 +197,7 @@ class FullHouse {
         }
     }
 
-    public canBeat(fullHouse: FullHouse) {
+    public canBeat(fullHouse: FullHouse): boolean {
         return this.pivot.canBeat(fullHouse.pivot)
     }
 }
@@ -232,7 +222,7 @@ class FourOfAKind {
         }
     }
 
-    public canBeat(fourOfAKind: FullHouse) {
+    public canBeat(fourOfAKind: FullHouse): boolean {
         return this.pivot.canBeat(fourOfAKind.pivot)
     }
 }
@@ -255,7 +245,7 @@ class StraightFlush {
         }
     }
 
-    public canBeat(straightFlush: StraightFlush) {
+    public canBeat(straightFlush: StraightFlush): boolean {
         if (this.isA2Straight !== straightFlush.isA2Straight) {
             return this.isA2Straight
         } else {
@@ -264,7 +254,105 @@ class StraightFlush {
     }
 }
 
+class Seat {
+    readonly position: SeatPostion
 
+    constructor(position: SeatPostion) {
+        this.position = position
+    }
+
+    get next(): Seat {
+        return this.position === 3 ? new Seat(0) : new Seat(this.position + 1)
+    }
+}
+
+// class Player {
+//     readonly seat: Seat
+//     score: number
+//     hands: Card[]
+// }
+
+// class GameState {
+//     players: Player[]
+//     currentSeat: Seat
+
+// }
+
+// class FiveCardPlay {
+//     readonly value: Straight | Flush | FullHouse | FourOfAKind | StraightFlush
+
+//     constructor(cards: Card[]) {
+//         const constructors = [Straight, Flush, FullHouse, FourOfAKind, StraightFlush]
+//         for (const constructor of constructors) {
+//             try {
+//                 this.value = new constructor(cards)
+//                 break
+//             } catch (err) {
+//                 continue
+//             }
+//         }
+//         throw new GameLogicError("Invalid Five Card Play formation.")
+//     }
+
+//     public canBeat(fiveCardPlay: FiveCardPlay) {
+        
+//     }
+// }
+
+class Play {
+    readonly value: Single | Pair | Triple | Straight | Flush | FullHouse | FourOfAKind | StraightFlush
+
+    constructor(cards: Card[]) {
+        try {
+            if (cards.length === 1) {
+                this.value = new Single(cards[0])
+            } else if (cards.length === 2) {
+                this.value = new Pair(cards)
+            } else if (cards.length === 3) {
+                this.value = new Triple(cards)
+            } else if (cards.length === 5) {
+                const constructors = [Straight, Flush, FullHouse, FourOfAKind, StraightFlush]
+                for (const constructor of constructors) {
+                    try {
+                        this.value = new constructor(cards)
+                        break
+                    } catch (err) {
+                        continue
+                    }
+                }
+                throw new GameLogicError("Invalid Five Card Play formation.")
+            } else {
+                throw new GameLogicError("Invalid number of cards.")
+            }
+        } catch (err) {
+            throw new GameLogicError(`Invalid Play formation. Reason: ${err}`)
+        }
+    }
+
+    private static getFiveCardPlayRank(fiveCardPlay: Straight | Flush | FullHouse | FourOfAKind | StraightFlush): number {
+        if (fiveCardPlay instanceof Straight) return 0
+        if (fiveCardPlay instanceof Flush) return 1
+        if (fiveCardPlay instanceof FullHouse) return 2
+        if (fiveCardPlay instanceof FourOfAKind) return 3
+        if (fiveCardPlay instanceof StraightFlush) return 4
+    }
+
+    private get isFiveCardPlay(): boolean {
+        return this.value instanceof Straight || this.value instanceof Flush || this.value instanceof FullHouse || this.value instanceof FourOfAKind || this.value instanceof StraightFlush
+    }
+
+    public canBeat(play: Play): boolean {
+        if (this.value instanceof Single) {
+            return play.value instanceof Single && this.value.canBeat(play.value)
+        } else if (this.value instanceof Pair) {
+            return play.value instanceof Pair && this.value.canBeat(play.value)
+        } else if (this.value instanceof Triple) {
+            return play.value instanceof Triple && this.value.canBeat(play.value)
+        } else if (this.isFiveCardPlay) {
+            
+        }
+    }
+}
 
 // export interface Player {
 //     seat: Seat,

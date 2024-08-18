@@ -1,4 +1,5 @@
-import { Suit, SuitValue, Card, Rank, RankValue } from "./services/gameLogicService/bigTwo/types";
+import { Suit, Card, Rank } from "./services/gameLogicService/bigTwo/types";
+import { SuitValue, RankValue } from "./services/gameLogicService/bigTwo/constants";
 
 console.log("index.ts is running")
 
