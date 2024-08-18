@@ -278,29 +278,51 @@ class Seat {
 
 // }
 
-// class FiveCardPlay {
-//     readonly value: Straight | Flush | FullHouse | FourOfAKind | StraightFlush
+class FiveCardPlay {
+    readonly value: Straight | Flush | FullHouse | FourOfAKind | StraightFlush
 
-//     constructor(cards: Card[]) {
-//         const constructors = [Straight, Flush, FullHouse, FourOfAKind, StraightFlush]
-//         for (const constructor of constructors) {
-//             try {
-//                 this.value = new constructor(cards)
-//                 break
-//             } catch (err) {
-//                 continue
-//             }
-//         }
-//         throw new GameLogicError("Invalid Five Card Play formation.")
-//     }
+    constructor(cards: Card[]) {
+        const constructors = [Straight, Flush, FullHouse, FourOfAKind, StraightFlush]
+        let isValidCombination = false
+        for (const constructor of constructors) {
+            try {
+                this.value = new constructor(cards)
+                isValidCombination = true
+                break
+            } catch (err) {
+                continue
+            }
+        }
+        if (!isValidCombination) {
+            throw new GameLogicError("Invalid Five Card Play formation.")
+        }
+    }
 
-//     public canBeat(fiveCardPlay: FiveCardPlay) {
-        
-//     }
-// }
+    private get rank(): number {
+        if (this.value instanceof Straight) return 0
+        if (this.value instanceof Flush) return 1
+        if (this.value instanceof FullHouse) return 2
+        if (this.value instanceof FourOfAKind) return 3
+        if (this.value instanceof StraightFlush) return 4
+    }
+
+    public canBeat(fiveCardPlay: FiveCardPlay) {
+        if (this.rank > fiveCardPlay.rank) {
+            return true
+        } else if (this.rank === fiveCardPlay.rank) {
+            if (this.value instanceof Straight) return this.value.canBeat(fiveCardPlay.value as Straight)
+            if (this.value instanceof Flush) return this.value.canBeat(fiveCardPlay.value as Flush)
+            if (this.value instanceof FullHouse) return this.value.canBeat(fiveCardPlay.value as FullHouse)
+            if (this.value instanceof FourOfAKind) return this.value.canBeat(fiveCardPlay.value as FourOfAKind)
+            if (this.value instanceof StraightFlush) return this.value.canBeat(fiveCardPlay.value as StraightFlush)
+        } else {
+            return false
+        }
+    }
+}
 
 class Play {
-    readonly value: Single | Pair | Triple | Straight | Flush | FullHouse | FourOfAKind | StraightFlush
+    readonly value: Single | Pair | Triple | FiveCardPlay
 
     constructor(cards: Card[]) {
         try {
@@ -311,34 +333,13 @@ class Play {
             } else if (cards.length === 3) {
                 this.value = new Triple(cards)
             } else if (cards.length === 5) {
-                const constructors = [Straight, Flush, FullHouse, FourOfAKind, StraightFlush]
-                for (const constructor of constructors) {
-                    try {
-                        this.value = new constructor(cards)
-                        break
-                    } catch (err) {
-                        continue
-                    }
-                }
-                throw new GameLogicError("Invalid Five Card Play formation.")
+                this.value = new FiveCardPlay(cards)
             } else {
                 throw new GameLogicError("Invalid number of cards.")
             }
         } catch (err) {
             throw new GameLogicError(`Invalid Play formation. Reason: ${err}`)
         }
-    }
-
-    private static getFiveCardPlayRank(fiveCardPlay: Straight | Flush | FullHouse | FourOfAKind | StraightFlush): number {
-        if (fiveCardPlay instanceof Straight) return 0
-        if (fiveCardPlay instanceof Flush) return 1
-        if (fiveCardPlay instanceof FullHouse) return 2
-        if (fiveCardPlay instanceof FourOfAKind) return 3
-        if (fiveCardPlay instanceof StraightFlush) return 4
-    }
-
-    private get isFiveCardPlay(): boolean {
-        return this.value instanceof Straight || this.value instanceof Flush || this.value instanceof FullHouse || this.value instanceof FourOfAKind || this.value instanceof StraightFlush
     }
 
     public canBeat(play: Play): boolean {
@@ -348,8 +349,8 @@ class Play {
             return play.value instanceof Pair && this.value.canBeat(play.value)
         } else if (this.value instanceof Triple) {
             return play.value instanceof Triple && this.value.canBeat(play.value)
-        } else if (this.isFiveCardPlay) {
-            
+        } else if (this.value instanceof FiveCardPlay) {
+            return play.value instanceof FiveCardPlay && this.value.canBeat(play.value)
         }
     }
 }
