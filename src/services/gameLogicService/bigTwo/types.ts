@@ -1,7 +1,6 @@
-// import { Suit, Rank, Seat } from "./constants"
 import { Option } from "effect"
 import { GameLogicError } from "../../../utils/errors"
-import { SuitValue, RankValue, SeatPostion } from "./constants"
+import { SuitValue, RankValue, Seat } from "./constants"
 
 export class Suit {
     readonly value: SuitValue
@@ -254,30 +253,6 @@ class StraightFlush {
     }
 }
 
-class Seat {
-    readonly position: SeatPostion
-
-    constructor(position: SeatPostion) {
-        this.position = position
-    }
-
-    get next(): Seat {
-        return this.position === 3 ? new Seat(0) : new Seat(this.position + 1)
-    }
-}
-
-// class Player {
-//     readonly seat: Seat
-//     score: number
-//     hands: Card[]
-// }
-
-// class GameState {
-//     players: Player[]
-//     currentSeat: Seat
-
-// }
-
 class FiveCardPlay {
     readonly value: Straight | Flush | FullHouse | FourOfAKind | StraightFlush
 
@@ -323,8 +298,9 @@ class FiveCardPlay {
 
 class Play {
     readonly value: Single | Pair | Triple | FiveCardPlay
+    readonly seat: Seat
 
-    constructor(cards: Card[]) {
+    constructor(cards: Card[], seat: Seat) {
         try {
             if (cards.length === 1) {
                 this.value = new Single(cards[0])
@@ -337,6 +313,7 @@ class Play {
             } else {
                 throw new GameLogicError("Invalid number of cards.")
             }
+            this.seat = seat
         } catch (err) {
             throw new GameLogicError(`Invalid Play formation. Reason: ${err}`)
         }
@@ -355,158 +332,32 @@ class Play {
     }
 }
 
-// export interface Player {
-//     seat: Seat,
-//     score: number,
-//     hands: Card[]
-// }
+class Pass {
+    readonly seat: Seat
 
-// export interface GameState {
-//     players: Player[],
-//     currentSeat: Seat,
-//     leadingPlay: Option.Option<Play>,
-//     winner: Option.Option<Seat>
-// }
+    constructor(seat: Seat) {
+        this.seat = seat
+    }
+}
 
-// export class Single {
-//     card: Card
-//     constructor(cards: Card[]) {
-//         if (cards.length === 1) {
-//             this.card = cards[0]
-//         } else {
-//             throw new GameLogicError("Invalid Single formation.")
-//         }
-//     }
-// }
+export class Move {
+    readonly value: Play | Pass
 
-// class Pair {
-//     cards: Card[]
-//     pivot: Card
-//     constructor(cards: Card[]) {
-//         if (cards.length === 2 && haveSameRanks(cards)) {
-//             this.cards = cards
-//             this.pivot = getPivotFromCards(cards)
-//         } else {
-//             throw new GameLogicError("Invalid Pair formation.")
-//         }
-//     }
-// }
+    constructor(move: Play | Pass) {
+        this.value = move
+    }
+}
 
-// class Triple {
-//     cards: Card[]
-//     pivot: Card
-//     constructor(cards: Card[]) {
-//         if (cards.length === 3 && haveSameRanks(cards)) {
-//             this.cards = cards
-//             this.pivot = getPivotFromCards(cards)
-//         } else {
-//             throw new GameLogicError("Invalid Triple formation.")
-//         }
-//     }
-// }
+export interface Player {
+    seat: Seat,
+    score: number,
+    hands: Card[]
+}
 
-// class Straight {
-//     cards: Card[]
-//     rank: number
-//     constructor(cards: Card[]) {
-//         const matchedRank = Option.getOrNull(getStraightRank(cards))
-//         if (cards.length === 5 && matchedRank && !haveSameSuits(cards)) {
-//             this.cards = cards
-//             this.rank = matchedRank
-//         } else {
-//             throw new GameLogicError("Invalid Staright formation.")
-//         }
-//     }
-// }
+export interface GameState {
+    players: Player[],
+    currentSeat: Seat,
+    leadingPlay: Option.Option<Play>,
+    winner: Option.Option<Seat>
+}
 
-// class Flush {
-//     cards: Card[]
-//     pivot: Card
-//     constructor(cards: Card[]) {
-//         if (cards.length === 5 && haveSameSuits(cards) && Option.isNone(getStraightRank(cards))) {
-//             this.cards = cards
-//             this.pivot = getPivotFromCards(cards)
-//         } else {
-//             throw new GameLogicError("Invalid Flush formation.")
-//         }
-//     }
-// }
-
-// class FullHouse {
-//     cards: Card[]
-//     rank: number
-//     constructor(cards: Card[]) {
-//         const rankAppeared3Times = Option.getOrNull(getRankByAppearedTimes(3)(cards))
-//         if (cards.length === 5 && getNumberOfDiffRanksInCards(cards) === 2 && rankAppeared3Times) {
-//             this.cards = cards
-//             this.rank = rankAppeared3Times
-//         } else {
-//             throw new GameLogicError("Invalid Full House formation.")
-//         }
-//     }
-// }
-
-// class FourOfAKind {
-//     cards: Card[]
-//     rank: number
-//     constructor(cards: Card[]) {
-//         const rankAppeared4Times = Option.getOrNull(getRankByAppearedTimes(4)(cards))
-//         if (cards.length === 5 && getNumberOfDiffRanksInCards(cards) === 2 && rankAppeared4Times) {
-//             this.cards = cards
-//             this.rank = rankAppeared4Times
-//         } else {
-//             throw new GameLogicError("Invalid Four of a Kind formation.")
-//         }
-//     }
-// }
-
-// class StraightFlush {
-//     cards: Card[]
-//     rank: number
-//     constructor(cards: Card[]) {
-//         const matchedRank = Option.getOrNull(getStraightRank(cards))
-//         if (cards.length === 5 && matchedRank && haveSameSuits(cards)) {
-//             this.cards = cards
-//             this.rank = matchedRank
-//         } else {
-//             throw new GameLogicError("Invalid Straight Flush formation.")
-//         }
-//     }
-// }
-
-// export type PlayType = Single | Pair | Triple | Straight | Flush | FullHouse | FourOfAKind | StraightFlush
-
-// export class Play {
-//     type: PlayType
-//     seat: Seat
-//     cards: Card[]
-//     constructor(cards: Card[], seat: Seat) {
-//         const playConstructors = [Single, Pair, Triple, Straight, Flush, FullHouse, FourOfAKind, StraightFlush]
-//         let validPlayConstructed = false
-//         for (const playConstructor of playConstructors) {
-//             try {
-//                 this.type = new playConstructor(cards)
-//                 this.cards = cards
-//                 this.seat = seat
-//                 validPlayConstructed = true
-//                 break
-//             } catch (e) {
-//                 if (!(e instanceof GameLogicError)) {
-//                     throw e
-//                 }
-//             }
-//         }
-//         if (!validPlayConstructed) {
-//             throw new GameLogicError("Invalid card combination to make a play.")
-//         }
-//     }
-// }
-
-// export class Pass {
-//     seat: Seat
-//     constructor(seat: Seat) {
-//         this.seat = seat
-//     }
-// }
-
-// export type Move = Play | Pass
