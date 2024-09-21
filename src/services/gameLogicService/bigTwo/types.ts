@@ -1,6 +1,6 @@
 import { Option } from "effect"
 import { GameLogicError } from "../../../utils/errors"
-import { SuitValue, RankValue, Seat } from "./constants"
+import { SuitValue, RankValue, SeatValue } from "./constants"
 
 export class Suit {
     readonly value: SuitValue
@@ -296,7 +296,7 @@ class FiveCardPlay {
     }
 }
 
-class Play {
+export class Play {
     readonly value: Single | Pair | Triple | FiveCardPlay
     readonly seat: Seat
 
@@ -332,7 +332,24 @@ class Play {
     }
 }
 
-class Pass {
+export class Seat {
+    readonly value: SeatValue
+
+    constructor(value: SeatValue) {
+        this.value = value
+    }
+
+    get next(): Seat {
+        switch (this.value) {
+            case SeatValue.North: return new Seat(SeatValue.West)
+            case SeatValue.West: return new Seat(SeatValue.South)
+            case SeatValue.South: return new Seat(SeatValue.East)
+            case SeatValue.East: return new Seat(SeatValue.North)
+        }
+    }
+}
+
+export class Pass {
     readonly seat: Seat
 
     constructor(seat: Seat) {
@@ -340,13 +357,7 @@ class Pass {
     }
 }
 
-export class Move {
-    readonly value: Play | Pass
-
-    constructor(move: Play | Pass) {
-        this.value = move
-    }
-}
+export type Move = Pass | Play
 
 export interface Player {
     seat: Seat,
@@ -360,4 +371,3 @@ export interface GameState {
     leadingPlay: Option.Option<Play>,
     winner: Option.Option<Seat>
 }
-

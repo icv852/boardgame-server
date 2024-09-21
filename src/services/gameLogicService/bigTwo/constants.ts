@@ -21,7 +21,7 @@ export enum RankValue {
     Two
 }
 
-export enum Seat {
+export enum SeatValue {
     North = 0,
     West,
     South,
