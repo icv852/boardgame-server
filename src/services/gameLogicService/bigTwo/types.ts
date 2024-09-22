@@ -298,6 +298,7 @@ class FiveCardPlay {
 
 export class Play {
     readonly value: Single | Pair | Triple | FiveCardPlay
+    readonly cards: Card[]
     readonly seat: Seat
 
     constructor(cards: Card[], seat: Seat) {
@@ -314,6 +315,7 @@ export class Play {
                 throw new GameLogicError("Invalid number of cards.")
             }
             this.seat = seat
+            this.cards = cards
         } catch (err) {
             throw new GameLogicError(`Invalid Play formation. Reason: ${err}`)
         }
