@@ -1,6 +1,7 @@
 import { Effect, Option, pipe } from "effect"
 import { GameState, Move, Pass, Play, Seat } from "./types"
 import { GameLogicError } from "../../../utils/errors"
+import { updateScores } from "./scoring"
 
 const isMoveByCurrentSeat = (gameState: GameState) => (move: Move): boolean => gameState.currentSeat === move.seat
 const isLeadingPlayExists = (gameState: GameState): boolean => Option.isSome(gameState.leadingPlay)
@@ -29,10 +30,6 @@ const removeHandsByPlay = (play: Play) => (gameState: GameState): GameState => {
     }
 }
 const updateWinner = (winner: Seat) => (gameState: GameState): GameState => ({ ...gameState, winner: Option.some(winner) })
-const updateScores = (gameState: GameState): GameState => {
-    // TBD
-    return gameState
-}
 
 const settleIfWinnerExists = (gameState: GameState): GameState => {
     const winner = gameState.players.find(player => player.hands.length < 1)
