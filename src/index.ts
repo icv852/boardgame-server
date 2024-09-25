@@ -1,11 +1,11 @@
-import { Suit, Card, Rank } from "./services/gameLogicService/bigTwo/types";
-import { SuitValue, RankValue } from "./services/gameLogicService/bigTwo/constants";
+import DatabaseManager from "./DatabaseManager"
 
-console.log("index.ts is running")
+async function main() {
+    const db = DatabaseManager.init()
+}
 
-// const suitSpade = new Suit(SuitValue.Spade)
-// console.log(suitSpade.next)
-
-const card1 = new Card(new Suit(SuitValue.Club), new Rank(RankValue.Two))
-
-console.log(card1.next)
+try {
+    main()
+} catch (err) {
+    console.error("Failed to start. Error: ", err)
+}
