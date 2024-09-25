@@ -1,4 +1,4 @@
-import DatabaseManager from "./DatabaseManager"
+import DatabaseManager from "./services/DatabaseManager"
 
 async function main() {
     const db = DatabaseManager.init()
