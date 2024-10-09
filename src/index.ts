@@ -1,7 +1,9 @@
-import DatabaseManager from "./services/database-service/DatabaseManager"
+import DatabaseService from "./services/database-service/DatabaseService"
+import createKoaApp from "./app"
 
 async function main() {
-    const db = DatabaseManager.init()
+    // const db = DatabaseService.init()
+    const koaApp = createKoaApp()
 }
 
 try {
