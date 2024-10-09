@@ -10,7 +10,7 @@ export default class DatabaseManager {
 
     static async init() {
         const db = await open({
-            filename: "./socketTestDb.db",
+            filename: "./boardgameServer.db",
             driver: sqlite3.Database
         })
 
