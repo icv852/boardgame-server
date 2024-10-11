@@ -1,8 +1,8 @@
-import DatabaseService from "./services/database-service/DatabaseService"
 import createKoaApp from "./app"
+import { PrismaClient } from "@prisma/client"
 
 async function main() {
-    // const db = DatabaseService.init()
+    const prisma = new PrismaClient()
     const koaApp = createKoaApp()
 }
 
