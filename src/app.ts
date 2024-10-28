@@ -3,14 +3,14 @@ import bodyParser from "koa-bodyparser"
 import sessionMiddleware from "./middlewares/session"
 import passportMiddleware from "./middlewares/passport"
 import routerMiddleware from "./middlewares/router"
-import DatabaseService from "./services/database-service/DatabaseService"
+import AuthService from "./services/auth-service/AuthService"
 
-export default function createKoaApp(db: DatabaseService) {
+export default function createKoaApp(authService: AuthService) {
     const app = new Koa()
     app.use(bodyParser())
     app.use(routerMiddleware())
     app.use(sessionMiddleware(app))
-    app.use(passportMiddleware(db))
+    app.use(passportMiddleware(authService))
 
     return app
 }

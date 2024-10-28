@@ -1,6 +1,6 @@
 import { PrismaClient, User } from "@prisma/client";
-import { AuthenticationError, InternalError } from "../../utils/errors";
-import { Effect } from "effect";
+import { InternalError } from "../../utils/errors";
+import { Effect, Option } from "effect";
 
 export default class DatabaseService {
     private db: PrismaClient
@@ -18,19 +18,19 @@ export default class DatabaseService {
         }        
     }
 
-    public async getUserById(id: string): Promise<Effect.Effect<User, AuthenticationError | InternalError>> {
+    public async getUserById(id: string): Promise<Effect.Effect<Option.Option<User>, InternalError>> {
         try {
             const user = await this.db.user.findUnique({ where: { id } })
-            return user ? Effect.succeed(user) : Effect.fail(new AuthenticationError(`User with ID: ${id} is not found.`))
+            return user ? Effect.succeed(Option.some(user)) : Effect.succeed(Option.none())
         } catch (e) {
             return Effect.fail(new InternalError(e))
         }        
     }
 
-    public async getUserByUsername(username: string): Promise<Effect.Effect<User, AuthenticationError | InternalError>> {
+    public async getUserByUsername(username: string): Promise<Effect.Effect<Option.Option<User>, InternalError>> {
         try {
             const user = await this.db.user.findUnique({ where: { username } })
-            return user ? Effect.succeed(user) : Effect.fail(new AuthenticationError(`User with username: ${username} is not found.`))
+            return user ? Effect.succeed(Option.some(user)) : Effect.succeed(Option.none())
         } catch (e) {
             return Effect.fail(new InternalError(e))
         }        

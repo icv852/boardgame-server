@@ -1,16 +1,16 @@
 import passport from "koa-passport"
 import { User } from "@prisma/client"
-import DatabaseService from "../services/database-service/DatabaseService"
 import localStrategy from "passport-local"
 import { Effect } from "effect"
+import AuthService from "../services/auth-service/AuthService"
 
 const LocalStrategy = localStrategy.Strategy
 
-const passportMiddleware = (db: DatabaseService) => {
+const passportMiddleware = (authService: AuthService) => {
     passport.serializeUser((user: User, done) => done(null, user.id)) 
 
     passport.deserializeUser(async (id: string, done) => {
-        const user = await db.getUserById(id)
+        const user = await authService.getUserById(id)
         user.pipe(Effect.match({
             onFailure: (e) => done(e),
             onSuccess: (user) => done(null, user),
@@ -18,7 +18,7 @@ const passportMiddleware = (db: DatabaseService) => {
     })
 
     passport.use(new LocalStrategy(async (username, password, done) => {
-        const user = await db.getUserByUsername(username)
+        const user = await authService.getUserByUsername(username)
         user.pipe(Effect.match({
             onFailure: (e) => {
                 switch (e._tag) {
