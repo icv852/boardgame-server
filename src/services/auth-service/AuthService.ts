@@ -2,6 +2,7 @@ import { Effect } from "effect"
 import { AuthenticationError, InternalError } from "../../utils/errors"
 import DatabaseService from "../database-service/DatabaseService"
 import { User } from "@prisma/client"
+import { AtLeastOne } from "../../utils/types"
 
 export default class AuthService {
     private databaseService: DatabaseService
@@ -18,19 +19,11 @@ export default class AuthService {
         }
     }
 
-    public async getUserById(id: string): Promise<Effect.Effect<User, AuthenticationError | InternalError, DatabaseService>> {
-        const result = await this.databaseService.getUserById(id)
+    public async getUniqueUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Promise<Effect.Effect<User, AuthenticationError | InternalError, DatabaseService>> {
+        const result = await this.databaseService.getUniqueUser(where)
         return result.pipe(
             Effect.flatten,
-            Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`User with id: ${id} is not found.`) : e)
-        )
-    }
-
-    public async getUserByUsername(username: string): Promise<Effect.Effect<User, AuthenticationError | InternalError, DatabaseService>> {
-        const result = await this.databaseService.getUserByUsername(username)
-        return result.pipe(
-            Effect.flatten,
-            Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`User with username: ${username} is not found.`) : e)
+            Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`User is not found.`) : e)
         )
     }
 }

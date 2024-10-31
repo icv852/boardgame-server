@@ -10,7 +10,7 @@ const passportMiddleware = (authService: AuthService) => {
     passport.serializeUser((user: User, done) => done(null, user.id)) 
 
     passport.deserializeUser(async (id: string, done) => {
-        const user = await authService.getUserById(id)
+        const user = await authService.getUniqueUser({ id })
         user.pipe(Effect.match({
             onFailure: (e) => done(e),
             onSuccess: (user) => done(null, user),
@@ -18,7 +18,7 @@ const passportMiddleware = (authService: AuthService) => {
     })
 
     passport.use(new LocalStrategy(async (username, password, done) => {
-        const user = await authService.getUserByUsername(username)
+        const user = await authService.getUniqueUser({ username })
         user.pipe(Effect.match({
             onFailure: (e) => {
                 switch (e._tag) {
