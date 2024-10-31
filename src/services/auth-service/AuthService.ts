@@ -23,7 +23,7 @@ export default class AuthService {
         const result = await this.databaseService.getUser(where)
         return result.pipe(
             Effect.flatten,
-            Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`User is not found.`) : e)
+            Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`User with ${where} is not found`) : e)
         )
     }
 }

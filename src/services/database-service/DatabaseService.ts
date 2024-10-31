@@ -33,7 +33,7 @@ export default class DatabaseService {
             const user = await this.db.user.findUnique({ where })
             return user ? Effect.succeed(Option.some(user)) : Effect.succeed(Option.none())
         } catch (e) {
-            return Effect.fail(new InternalError(`Failed to get unique user: ${e}`))
+            return Effect.fail(new InternalError(`Failed to get user with ${where}: ${e}`))
         }
     }
 
