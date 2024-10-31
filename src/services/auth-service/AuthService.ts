@@ -19,8 +19,8 @@ export default class AuthService {
         }
     }
 
-    public async getUniqueUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Promise<Effect.Effect<User, AuthenticationError | InternalError, DatabaseService>> {
-        const result = await this.databaseService.getUniqueUser(where)
+    public async getUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Promise<Effect.Effect<User, AuthenticationError | InternalError, DatabaseService>> {
+        const result = await this.databaseService.getUser(where)
         return result.pipe(
             Effect.flatten,
             Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`User is not found.`) : e)

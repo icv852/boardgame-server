@@ -28,7 +28,7 @@ export default class DatabaseService {
         }
     }
 
-    public async getUniqueUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Promise<Effect.Effect<Option.Option<User>, InternalError>> {
+    public async getUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Promise<Effect.Effect<Option.Option<User>, InternalError>> {
         try {
             const user = await this.db.user.findUnique({ where })
             return user ? Effect.succeed(Option.some(user)) : Effect.succeed(Option.none())
