@@ -37,19 +37,18 @@ export default class DatabaseService {
         }
     }
 
-    public async updateUser(id: string, data: Partial<Omit<User, "id" | "createdAt" | "updatedAt">>): Promise<Effect.Effect<User, InternalError>> {
-        try {
-            const updatedUser = await this.db.user.update({
-                where: { id },
-                data: {
-                    ...data,
-                    updatedAt: new Date()
-                }
-            })
-            return Effect.succeed(updatedUser)
-        } catch (e) {
-            return Effect.fail(new InternalError(`Failed to update user with id [${id}]: ${e}`))
-        }
+    public updateUser(data: Partial<Pick<User, "username" | "email" | "passwordHash">>) {
+        return async (id: string): Promise<Effect.Effect<User, InternalError>> => {
+            try {
+                const updatedUser = await this.db.user.update({
+                    where: { id },
+                    data: { ...data, updatedAt: new Date() }
+                })
+                return Effect.succeed(updatedUser)
+            } catch (e) {
+                return Effect.fail(new InternalError(`Failed to update user with id [${id}]: ${e}`))
+            }
+        }        
     }
 
     public async deleteUser(id: string): Promise<Effect.Effect<User, InternalError>> {

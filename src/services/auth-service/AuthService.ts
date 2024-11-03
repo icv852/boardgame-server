@@ -50,4 +50,15 @@ export default class AuthService {
 
         return Effect.all([checkUsernameUsed, checkEmailUsed, saveUser]).pipe(Effect.map(tasks => tasks[2]))
     }
+
+    public async updateUser(where: AtLeastOne<Pick<User, "id" | "username" | "email">>, data: Partial<Pick<User, "username" | "email"> & { password: string }>): Promise<Effect.Effect<User, AuthenticationError | InternalError, DatabaseService>> {
+        return pipe(
+            await this.databaseService.getUser(where),
+            Effect.flatten,
+            Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`Failed to update user. User with ${where} is not found.`) : e),
+            Effect.map(user => user.id),  
+            Effect.runSync,
+            this.databaseService.updateUser(data)
+        )
+    }
 }
