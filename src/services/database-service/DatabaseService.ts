@@ -19,7 +19,7 @@ export default class DatabaseService {
         }        
     }
 
-    public async createUser(data: Omit<User, "id" | "createdAt" | "updatedAt">): Promise<Effect.Effect<User, InternalError>> {
+    public async createUser(data: Pick<User, "username" | "email" | "passwordHash">): Promise<Effect.Effect<User, InternalError>> {
         try {
             const createdUser = await this.db.user.create({ data })
             return Effect.succeed(createdUser)
