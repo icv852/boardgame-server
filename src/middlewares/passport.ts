@@ -3,6 +3,7 @@ import { User } from "@prisma/client"
 import localStrategy from "passport-local"
 import { Effect } from "effect"
 import AuthService from "../services/auth-service/AuthService"
+import bcrypt from "bcrypt"
 
 const LocalStrategy = localStrategy.Strategy
 
@@ -26,9 +27,9 @@ const passportMiddleware = (authService: AuthService) => {
                     case "AuthenticationError": return done(null, false)
                 }
             },
-            onSuccess: (user) => {
-                // TBD: password should be hashed
-                if (username === user.username && password === user.passwordHash) {
+            onSuccess: async (user) => {
+                const isPasswordMatch = await bcrypt.compare(password, user.passwordHash)
+                if (username === user.username && isPasswordMatch) {
                     return done(null, user)
                 } else {
                     return done(null, false)
