@@ -1,7 +1,7 @@
 import { PrismaClient, User } from "@prisma/client";
 import { InternalError } from "../../utils/errors";
 import { Effect, Option } from "effect";
-import { AtLeastOne } from "../../utils/types";
+import { AtLeastOne } from "../../utils/generics";
 
 export default class DatabaseService {
     private db: PrismaClient
@@ -19,44 +19,39 @@ export default class DatabaseService {
         }        
     }
 
-    public async createUser(data: Pick<User, "username" | "email" | "passwordHash">): Promise<Effect.Effect<User, InternalError>> {
-        try {
-            const createdUser = await this.db.user.create({ data })
-            return Effect.succeed(createdUser)
-        } catch (e) {
-            return Effect.fail(new InternalError(`Failed to create user: ${e}`))
-        }
+    public createUser(data: Pick<User, "username" | "email" | "passwordHash">): Effect.Effect<User, InternalError> {
+        return Effect.tryPromise({
+            try: () => this.db.user.create({ data }),
+            catch: (e) => new InternalError(`Failed to create user: ${e}`)
+        })
     }
 
-    public async getUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Promise<Effect.Effect<Option.Option<User>, InternalError>> {
-        try {
-            const user = await this.db.user.findUnique({ where })
-            return user ? Effect.succeed(Option.some(user)) : Effect.succeed(Option.none())
-        } catch (e) {
-            return Effect.fail(new InternalError(`Failed to get user with ${where}: ${e}`))
-        }
+    public getUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Effect.Effect<Option.Option<User>, InternalError> {
+        return Effect.tryPromise({
+            try: () => this.db.user.findUnique({ where }),
+            catch: (e) => new InternalError(`Failed to get user with ${where}: ${e}`)
+        })
+        .pipe(
+            Effect.map(user => user ? Option.some(user) : Option.none())
+        )
     }
 
     public updateUser(data: Partial<Pick<User, "username" | "email" | "passwordHash">>) {
-        return async (id: string): Promise<Effect.Effect<User, InternalError>> => {
-            try {
-                const updatedUser = await this.db.user.update({
+        return (id: string): Effect.Effect<User, InternalError> => {
+            return Effect.tryPromise({
+                try: () => this.db.user.update({
                     where: { id },
                     data: { ...data, updatedAt: new Date() }
-                })
-                return Effect.succeed(updatedUser)
-            } catch (e) {
-                return Effect.fail(new InternalError(`Failed to update user with id [${id}]: ${e}`))
-            }
+                }),
+                catch: (e) => new InternalError(`Failed to update user with id [${id}]: ${e}`)
+            })
         }        
     }
 
-    public async deleteUser(id: string): Promise<Effect.Effect<User, InternalError>> {
-        try {
-            const deletedUser = await this.db.user.delete({ where: { id } })
-            return Effect.succeed(deletedUser)
-        } catch (e) {
-            return Effect.fail(new InternalError(`Failed to delete user with id [${id}]: ${e}`))
-        }
+    public deleteUser(id: string): Effect.Effect<User, InternalError> {
+        return Effect.tryPromise({
+            try: () => this.db.user.delete({ where: { id } }),
+            catch: (e) => new InternalError(`Failed to delete user with id [${id}]: ${e}`)
+        })
     }
 }

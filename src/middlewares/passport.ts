@@ -3,15 +3,15 @@ import { User } from "@prisma/client"
 import localStrategy from "passport-local"
 import { Effect } from "effect"
 import AuthService from "../services/auth-service/AuthService"
-import bcrypt from "bcrypt"
+import { checkPassword } from "../utils/helpers"
 
 const LocalStrategy = localStrategy.Strategy
 
 const passportMiddleware = (authService: AuthService) => {
     passport.serializeUser((user: User, done) => done(null, user.id)) 
 
-    passport.deserializeUser(async (id: string, done) => {
-        const user = await authService.getUser({ id })
+    passport.deserializeUser((id: string, done) => {
+        const user = authService.getUser({ id })
         user.pipe(Effect.match({
             onFailure: (e) => done(e),
             onSuccess: (user) => done(null, user),
@@ -19,7 +19,7 @@ const passportMiddleware = (authService: AuthService) => {
     })
 
     passport.use(new LocalStrategy(async (username, password, done) => {
-        const user = await authService.getUser({ username })
+        const user = authService.getUser({ username })
         user.pipe(Effect.match({
             onFailure: (e) => {
                 switch (e._tag) {
@@ -28,7 +28,7 @@ const passportMiddleware = (authService: AuthService) => {
                 }
             },
             onSuccess: async (user) => {
-                const isPasswordMatch = await bcrypt.compare(password, user.passwordHash)
+                const isPasswordMatch = await checkPassword(password, user.passwordHash)
                 if (username === user.username && isPasswordMatch) {
                     return done(null, user)
                 } else {

@@ -1,12 +1,10 @@
 
 import { Effect, Option, pipe } from "effect"
-import bcrypt from "bcrypt"
 import { AuthenticationError, InternalError } from "../../utils/errors"
 import DatabaseService from "../database-service/DatabaseService"
 import { User } from "@prisma/client"
-import { AtLeastOne } from "../../utils/types"
-
-const saltRounds = 10
+import { AtLeastOne } from "../../utils/generics"
+import { hashPassword } from "../../utils/helpers"
 
 export default class AuthService {
     private databaseService: DatabaseService
@@ -23,37 +21,35 @@ export default class AuthService {
         }
     }
 
-    public async getUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Promise<Effect.Effect<User, AuthenticationError | InternalError, DatabaseService>> {
+    public getUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Effect.Effect<User, AuthenticationError | InternalError, DatabaseService> {
         return pipe(
-            await this.databaseService.getUser(where),
+            this.databaseService.getUser(where),
             Effect.flatten,
             Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`Failed to get user. User with ${where} is not found.`) : e)
         )
     }
 
-    public async createUser(data: Pick<User, "username" | "email"> & { password: string }): Promise<Effect.Effect<User, AuthenticationError | InternalError, DatabaseService>> {
+    public createUser(data: Pick<User, "username" | "email"> & { password: string }): Effect.Effect<User, AuthenticationError | InternalError, DatabaseService> {
         const checkUsernameUsed = pipe(
-            await this.databaseService.getUser({ username: data.username }),
+            this.databaseService.getUser({ username: data.username }),
             Effect.flatMap(user => Option.isSome(user) ? Effect.fail(new AuthenticationError(`Failed to create user. Username [${data.username}] has been used.`)) : Effect.void),
         )
         const checkEmailUsed = pipe(
-            await this.databaseService.getUser({ email: data.email }),
+            this.databaseService.getUser({ email: data.email }),
             Effect.flatMap(user => Option.isSome(user) ? Effect.fail(new AuthenticationError(`Failed to create user. Email [${data.email}] has been used.`)) : Effect.void),
         )
-
-        const passwordHash = await bcrypt.hash(data.password, saltRounds)
-        const saveUser = await this.databaseService.createUser({ 
-            username: data.username,
-            email: data.email,
-            passwordHash
-        })
-
+        const saveUser = pipe(
+            Effect.promise(() => hashPassword(data.password)),
+            Effect.map(passwordHash => ({ username: data.username, email: data.email, passwordHash })),
+            Effect.runSync,
+            this.databaseService.createUser,
+        )
         return Effect.all([checkUsernameUsed, checkEmailUsed, saveUser]).pipe(Effect.map(tasks => tasks[2]))
     }
 
-    public async updateUser(where: AtLeastOne<Pick<User, "id" | "username" | "email">>, data: Partial<Pick<User, "username" | "email"> & { password: string }>): Promise<Effect.Effect<User, AuthenticationError | InternalError, DatabaseService>> {
+    public updateUser(where: AtLeastOne<Pick<User, "id" | "username" | "email">>, data: Partial<Pick<User, "username" | "email"> & { password: string }>): Effect.Effect<User, AuthenticationError | InternalError, DatabaseService> {
         return pipe(
-            await this.databaseService.getUser(where),
+            this.databaseService.getUser(where),
             Effect.flatten,
             Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`Failed to update user. User with ${where} is not found.`) : e),
             Effect.map(user => user.id),  
