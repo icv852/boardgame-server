@@ -30,21 +30,15 @@ export default class AuthService {
     }
 
     public createUser(data: Pick<User, "username" | "email"> & { password: string }): Effect.Effect<User, AuthenticationError | InternalError, DatabaseService> {
-        const checkUsernameUsed = pipe(
+        return pipe(
             this.databaseService.getUser({ username: data.username }),
             Effect.flatMap(user => Option.isSome(user) ? Effect.fail(new AuthenticationError(`Failed to create user. Username [${data.username}] has been used.`)) : Effect.void),
-        )
-        const checkEmailUsed = pipe(
-            this.databaseService.getUser({ email: data.email }),
+            Effect.flatMap(() => this.databaseService.getUser({ email: data.email })),
             Effect.flatMap(user => Option.isSome(user) ? Effect.fail(new AuthenticationError(`Failed to create user. Email [${data.email}] has been used.`)) : Effect.void),
-        )
-        const saveUser = pipe(
-            Effect.promise(() => hashPassword(data.password)),
+            Effect.flatMap(() => Effect.promise(() => hashPassword(data.password))),
             Effect.map(passwordHash => ({ username: data.username, email: data.email, passwordHash })),
-            Effect.runSync,
-            this.databaseService.createUser,
+            Effect.flatMap(user => this.databaseService.createUser(user))
         )
-        return Effect.all([checkUsernameUsed, checkEmailUsed, saveUser]).pipe(Effect.map(tasks => tasks[2]))
     }
 
     public updateUser(where: AtLeastOne<Pick<User, "id" | "username" | "email">>, data: Partial<Pick<User, "username" | "email"> & { password: string }>): Effect.Effect<User, AuthenticationError | InternalError, DatabaseService> {
@@ -52,9 +46,7 @@ export default class AuthService {
             this.databaseService.getUser(where),
             Effect.flatten,
             Effect.mapError(e => e._tag === "NoSuchElementException" ? new AuthenticationError(`Failed to update user. User with ${where} is not found.`) : e),
-            Effect.map(user => user.id),  
-            Effect.runSync,
-            this.databaseService.updateUser(data)
+            Effect.flatMap(user => this.databaseService.updateUser(data)(user.id))
         )
     }
 }
