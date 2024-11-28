@@ -221,7 +221,7 @@ class FourOfAKind {
         }
     }
 
-    public canBeat(fourOfAKind: FullHouse): boolean {
+    public canBeat(fourOfAKind: FourOfAKind): boolean {
         return this.pivot.canBeat(fourOfAKind.pivot)
     }
 }
