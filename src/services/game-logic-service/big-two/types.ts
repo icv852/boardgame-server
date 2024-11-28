@@ -151,7 +151,7 @@ class Straight {
     }
 
     private static isTwoToSix(ranks: Rank[]): boolean {
-        const twoToSix = [RankValue.Three, RankValue.Four, RankValue.Five, RankValue.Ace, RankValue.Two]
+        const twoToSix = [RankValue.Three, RankValue.Four, RankValue.Five, RankValue.Six, RankValue.Two]
         return ranks.every((rank, idx) => rank.value === twoToSix[idx])
     }
 
