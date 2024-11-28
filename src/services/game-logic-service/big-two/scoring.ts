@@ -27,3 +27,23 @@ export const updateScores = (gameState: GameState): GameState => {
         players: updatedPlayers
     }
 }
+
+/**
+check ding dai:
+if (nextSeat.card === 1) {
+    if (leadingPlay > 1) {
+        false
+    } else if (leadingPlay === null) {
+        if (play > 1) {
+            false
+        } else {
+            CHECK: play is biggest in hands
+        }
+    } else if (leadingPlay === 1) {
+        CHECK: if play, is play biggest in hands; if pass, is biggest in hands cannot beat leadingPlay
+    }
+} else {
+    false
+}
+
+*/
