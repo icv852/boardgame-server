@@ -122,7 +122,7 @@ class Straight {
             if (Straight.isAceToFive(sortedRanks)) {
                 this.pivot = sortedCards[4]
                 this.isA2Straight = true
-            } else if (Straight.isTwoToSix || Straight.isRegularStraight) {
+            } else if (Straight.isTwoToSix(sortedRanks) || Straight.isRegularStraight(sortedRanks)) {
                 this.pivot = sortedCards[4]
                 this.isA2Straight = false
             } else {
