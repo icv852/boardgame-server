@@ -1,30 +1,6 @@
 import { Option } from "effect"
 import { GameLogicError } from "../../../utils/errors"
-import { SuitValue, RankValue, SeatValue } from "./constants"
-
-export class Suit {
-    readonly value: SuitValue
-
-    constructor(value: SuitValue) {
-        this.value = value
-    }
-
-    get next(): Option.Option<Suit> {
-        return this.value === SuitValue.Spade ? Option.none() : Option.some(new Suit(this.value + 1))
-    }
-}
-
-export class Rank {
-    readonly value: RankValue
-
-    constructor(value: RankValue) {
-        this.value = value
-    }
-
-    get next(): Option.Option<Rank> {
-        return this.value === RankValue.Two ? Option.none() : Option.some(new Rank(this.value + 1))
-    }
-}
+import { Suit, Rank, Seat } from "./constants"
 
 export class Card {
     readonly suit: Suit
@@ -36,33 +12,33 @@ export class Card {
     }
     
     get next(): Option.Option<Card> {
-        if (Option.isSome(this.rank.next)) {
-            return Option.some(new Card(this.suit, Option.getOrThrow(this.rank.next)))
-        } else if (Option.isSome(this.suit.next)) {
-            return Option.some(new Card(Option.getOrThrow(this.suit.next), new Rank(RankValue.Three)))
+        if (Option.isSome(Rank.getNext(this.rank))) {
+            return Option.some(new Card(this.suit, Option.getOrThrow(Rank.getNext(this.rank))))
+        } else if (Option.isSome(Suit.getNext(this.suit))) {
+            return Option.some(new Card(Option.getOrThrow(Suit.getNext(this.suit)), Rank.Three))
         } else {
             return Option.none()
         }
     }
 
     public canBeat(card: Card): boolean {
-        return this.rank.value > card.rank.value || (this.rank.value === card.rank.value && this.suit.value > card.suit.value)
+        return this.rank > card.rank || (this.rank === card.rank && this.suit > card.suit)
     }
 
     public existsIn(cards: Card[]): boolean {
-        return cards.filter(card => this.rank.value === card.rank.value && this.suit.value === card.suit.value).length > 0
+        return cards.filter(card => this.rank === card.rank && this.suit === card.suit).length > 0
     }
 
     static haveSameRank(cards: Card[]): boolean {
-        return cards.every(card => card.rank.value === cards[0].rank.value)
+        return cards.every(card => card.rank === cards[0].rank)
     }
 
     static haveSameSuit(cards: Card[]): boolean {
-        return cards.every(card => card.suit.value === cards[0].suit.value)
+        return cards.every(card => card.suit === cards[0].suit)
     }
 
     static getBiggest(cards: Card[]): Card {
-        return cards.reduce((prev, curr) => curr.canBeat(prev) ? curr : prev, new Card(new Suit(SuitValue.Diamond), new Rank(RankValue.Three)))
+        return cards.reduce((prev, curr) => curr.canBeat(prev) ? curr : prev, new Card(Suit.Diamond, Rank.Three))
     }
 
     static sort(cards: Card[]): Card[] {
@@ -146,17 +122,17 @@ class Straight {
     }
 
     private static isAceToFive(ranks: Rank[]): boolean {
-        const aceToFive = [RankValue.Three, RankValue.Four, RankValue.Five, RankValue.Ace, RankValue.Two]
-        return ranks.every((rank, idx) => rank.value === aceToFive[idx])
+        const aceToFive = [Rank.Three, Rank.Four, Rank.Five, Rank.Ace, Rank.Two]
+        return ranks.every((rank, idx) => rank === aceToFive[idx])
     }
 
     private static isTwoToSix(ranks: Rank[]): boolean {
-        const twoToSix = [RankValue.Three, RankValue.Four, RankValue.Five, RankValue.Six, RankValue.Two]
-        return ranks.every((rank, idx) => rank.value === twoToSix[idx])
+        const twoToSix = [Rank.Three, Rank.Four, Rank.Five, Rank.Six, Rank.Two]
+        return ranks.every((rank, idx) => rank === twoToSix[idx])
     }
 
     private static isRegularStraight(ranks: Rank[]): boolean {
-        return ranks.every((rank, idx) => idx === 4 || Option.getOrNull(rank.next)?.value === ranks[idx + 1].value)
+        return ranks.every((rank, idx) => idx === 4 || Option.getOrNull(Rank.getNext(rank)) === ranks[idx + 1])
     }
 }
 
@@ -234,7 +210,7 @@ class StraightFlush {
         const cardRanks = cards.map(card => card.rank)
         if (cards.length === 5 && Card.haveSameSuit(cards) && Straight.haveStraightPattern(cardRanks)) {
             this.pivot = Card.getBiggest(cards)
-            if (cardRanks.includes(new Rank(RankValue.Ace)) && cardRanks.includes(new Rank(RankValue.Two))) {
+            if (cardRanks.includes(Rank.Ace) && cardRanks.includes(Rank.Two)) {
                 this.isA2Straight = true
             } else {
                 this.isA2Straight = false
@@ -330,23 +306,6 @@ export class Play {
             return play.value instanceof Triple && this.value.canBeat(play.value)
         } else if (this.value instanceof FiveCardPlay) {
             return play.value instanceof FiveCardPlay && this.value.canBeat(play.value)
-        }
-    }
-}
-
-export class Seat {
-    readonly value: SeatValue
-
-    constructor(value: SeatValue) {
-        this.value = value
-    }
-
-    get next(): Seat {
-        switch (this.value) {
-            case SeatValue.North: return new Seat(SeatValue.West)
-            case SeatValue.West: return new Seat(SeatValue.South)
-            case SeatValue.South: return new Seat(SeatValue.East)
-            case SeatValue.East: return new Seat(SeatValue.North)
         }
     }
 }

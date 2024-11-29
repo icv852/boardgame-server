@@ -1,10 +1,10 @@
-import { RankValue, SuitValue } from "./constants";
-import { GameState, Card, Suit, Rank } from "./types";
+import { Rank, Suit } from "./constants";
+import { GameState, Card } from "./types";
 
-const Spade2 = new Card(new Suit(SuitValue.Spade), new Rank(RankValue.Two))
-const Heart2 = new Card(new Suit(SuitValue.Heart), new Rank(RankValue.Two))
-const Club2 = new Card(new Suit(SuitValue.Club), new Rank(RankValue.Two))
-const Diamond2 = new Card(new Suit(SuitValue.Diamond), new Rank(RankValue.Two))
+const Spade2 = new Card(Suit.Spade, Rank.Two)
+const Heart2 = new Card(Suit.Heart, Rank.Two)
+const Club2 = new Card(Suit.Club, Rank.Two)
+const Diamond2 = new Card(Suit.Diamond, Rank.Two)
 
 const getDeductedMarksByRemainingHands = (hands: Card[]): number => {
     const numberOfRemainingHands = hands.length

@@ -1,7 +1,8 @@
 import { Effect, Option, pipe } from "effect"
-import { GameState, Move, Pass, Play, Seat } from "./types"
+import { GameState, Move, Pass, Play } from "./types"
 import { GameLogicError } from "../../../utils/errors"
 import { updateScores } from "./scoring"
+import { Seat } from "./constants"
 
 const isMoveByCurrentSeat = (gameState: GameState) => (move: Move): boolean => gameState.currentSeat === move.seat
 const isLeadingPlayExists = (gameState: GameState): boolean => Option.isSome(gameState.leadingPlay)
@@ -10,12 +11,12 @@ const isPassingToLeadingPlayer = (pass: Pass) => (gameState: GameState): boolean
     onSome: (leadingPlay) => leadingPlay.seat === pass.seat
 })
 
-const assignCurrentSeatToNextPlayer = (gameState: GameState): GameState => ({ ...gameState, currentSeat: gameState.currentSeat.next })
+const assignCurrentSeatToNextPlayer = (gameState: GameState): GameState => ({ ...gameState, currentSeat: Seat.getNext(gameState.currentSeat) })
 const clearLeadingPlay = (gameState: GameState): GameState => ({ ...gameState, leadingPlay: Option.none() })
 const updateLeadingPlay = (play: Play) => (gameState: GameState): GameState => ({ ...gameState, leadingPlay: Option.some(play) })
 const removeHandsByPlay = (play: Play) => (gameState: GameState): GameState => {
     const updatedPlayers = gameState.players.map(player => {
-        if (player.seat.value === play.seat.value) {
+        if (player.seat === play.seat) {
             return {
                 ...player,
                 hands: player.hands.filter(card => !card.existsIn(play.cards))

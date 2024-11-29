@@ -1,11 +1,18 @@
-export enum SuitValue {
+import { Option } from "effect"
+
+export enum Suit {
     Diamond = 0,
     Club,
     Heart,
     Spade
 }
 
-export enum RankValue {
+export namespace Suit {
+    export const getNext = (suit: Suit): Option.Option<Suit> => suit === Suit.Spade ? Option.none() : Option.some(suit + 1)
+    export const getPrevious = (suit: Suit): Option.Option<Suit> => suit === Suit.Diamond ? Option.none() : Option.some(suit - 1)
+}
+
+export enum Rank {
     Three = 0,
     Four,
     Five,
@@ -21,9 +28,18 @@ export enum RankValue {
     Two
 }
 
-export enum SeatValue {
+export namespace Rank {
+    export const getNext = (rank: Rank): Option.Option<Rank> => rank === Rank.Two ? Option.none() : Option.some(rank + 1)
+    export const getPrevious = (rank: Rank): Option.Option<Rank> => rank === Rank.Three ? Option.none() : Option.some(rank - 1)
+}
+
+export enum Seat {
     North = 0,
     West,
     South,
     East
+}
+
+export namespace Seat {
+    export const getNext = (seat: Seat): Seat => seat === Seat.East ? Seat.North : seat + 1
 }
