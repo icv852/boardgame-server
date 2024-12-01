@@ -1,0 +1,12 @@
+make a move:
+if winner exists, fail.
+make a pass/play.
+
+make a pass:
+if leadingPlay not exists, fail.
+update gameState, currentSeat + 1, if pass to leadingSeat, leadingPlay resets to empty + isLastSeatSuspectAssistance.
+
+make a play:
+if leadingPlay not exists, update gameState, leadingPlay + currentSeat + isLastSeatSuspectAssistance
+if leadingPlay exists, check if beatable, update gameState, leadingPlay + currentSeat + isLastSeatSuspectAssistance.
+if player empty hands, update gameState, winner.

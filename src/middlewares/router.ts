@@ -1,14 +1,19 @@
 import Router from "@koa/router"
+import AuthService from "../services/auth-service/AuthService"
+import bodyParser from "koa-bodyparser"
 
-const RouterMiddleware = () => {
+const RouterMiddleware = (authService: AuthService) => {
     const router = new Router()
+
+    router.use(bodyParser())
 
     router.get("/", (ctx, next) => {
         ctx.response.body = "This is main page."
     })
 
-    router.get("/test", (ctx, next) => {
-        ctx.response.body = "This is a test page."
+    router.post("/users", (ctx, next) => {
+        ctx.body = ctx.body
+        ctx.status = 201
     })
 
     return async (ctx, next) => {

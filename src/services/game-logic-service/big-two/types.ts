@@ -328,7 +328,7 @@ export interface Player {
 
 export interface GameState {
     players: Player[],
-    currentSeat: Seat,
-    leadingPlay: Option.Option<Play>,
-    winner: Option.Option<Seat>
+    current: Seat,
+    lead: Option.Option<Play>,
+    suspectedAssistance: boolean, // true when a player doesn't try his best to prevent next player with only one card in hand from winning
 }
