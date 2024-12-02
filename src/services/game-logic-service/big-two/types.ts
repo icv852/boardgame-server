@@ -44,9 +44,13 @@ export class Card {
     static sort(cards: Card[]): Card[] {
         return cards.sort((a, b) => a.canBeat(b) ? 1 : -1)
     }
+
+    static isSame(cards: Card[]): boolean {
+        return this.haveSameSuit(cards) && this.haveSameRank(cards)
+    }
 }
 
-class Single {
+export class Single {
     readonly card: Card
     constructor(card: Card) {
         this.card = card
