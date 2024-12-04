@@ -1,31 +1,27 @@
-import { Rank, Suit } from "./constants";
+import { Option, pipe } from "effect";
+import { Rank, Seat, Suit } from "./constants";
 import { GameState, Card } from "./types";
 
-const Spade2 = new Card(Suit.Spade, Rank.Two)
-const Heart2 = new Card(Suit.Heart, Rank.Two)
-const Club2 = new Card(Suit.Club, Rank.Two)
-const Diamond2 = new Card(Suit.Diamond, Rank.Two)
+const CARD_SPADE_2 = new Card(Suit.Spade, Rank.Two)
+const CARD_HEART_2 = new Card(Suit.Heart, Rank.Two)
+const CARD_CLUB_2 = new Card(Suit.Club, Rank.Two)
+const CARD_DIAMOND_2 = new Card(Suit.Diamond, Rank.Two)
 
-const getDeductedMarksByRemainingHands = (hands: Card[]): number => {
+const getPenaltyByRemainingHands = (hands: Card[]): number => {
     const numberOfRemainingHands = hands.length
     const isMoreThanNineCards = numberOfRemainingHands > 9
-    const hasRemainingTwo = [Spade2, Heart2, Club2, Diamond2].reduce((prev, curr) => curr.existsIn(hands) ? true : prev, false)
+    const hasRemainingTwo = [CARD_SPADE_2, CARD_HEART_2, CARD_CLUB_2, CARD_DIAMOND_2].some(card => card.existsIn(hands))
     const multiplier = (isMoreThanNineCards ? 2 : 1) * (hasRemainingTwo ? 2 : 1)
-    return -numberOfRemainingHands * multiplier
+    return numberOfRemainingHands * multiplier
 }
 
-export const updateScores = (gameState: GameState): GameState => {
-    const scoreGainedByWinner = gameState.players.map(player => player.hands).reduce((prev, curr) => getDeductedMarksByRemainingHands(curr) + prev, 0)
+export const getGainedOrDeductedScore = (seat: Seat) => (gameState: GameState): number => {
+    const winner = gameState.current
+    const suspectAssistant = gameState.suspectedAssistance ? Option.some(Seat.getPrevious(gameState.current)) : Option.none()
 
-    const updatedPlayers = gameState.players.map(player => ({
-        ...player,
-        score: player.score + (getDeductedMarksByRemainingHands(player.hands) ?? scoreGainedByWinner)
-    }))
+    const scoreGainedByWinner = gameState.players.map(player => player.hands).reduce((prev, curr) => getPenaltyByRemainingHands(curr) + prev, 0)
 
-    return {
-        ...gameState,
-        players: updatedPlayers
-    }
+    
 }
 
 /**

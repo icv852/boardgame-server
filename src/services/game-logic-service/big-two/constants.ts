@@ -1,5 +1,7 @@
 import { Option } from "effect"
 
+export const NUM_FULL_HANDS = 13
+
 export enum Suit {
     Diamond = 0,
     Club,
@@ -42,4 +44,5 @@ export enum Seat {
 
 export namespace Seat {
     export const getNext = (seat: Seat): Seat => seat === Seat.East ? Seat.North : seat + 1
+    export const getPrevious = (seat: Seat): Seat => seat === Seat.North ? Seat.East : seat - 1
 }
