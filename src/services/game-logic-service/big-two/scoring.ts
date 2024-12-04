@@ -16,12 +16,18 @@ const getPenaltyByRemainingHands = (hands: Card[]): number => {
 }
 
 export const getGainedOrDeductedScore = (seat: Seat) => (gameState: GameState): number => {
-    const winner = gameState.current
-    const suspectAssistant = gameState.suspectedAssistance ? Option.some(Seat.getPrevious(gameState.current)) : Option.none()
+    const isWinner = gameState.current === seat
+    const suspectAssistant = gameState.suspectedAssistance ? Seat.getPrevious(gameState.current) : false
 
     const scoreGainedByWinner = gameState.players.map(player => player.hands).reduce((prev, curr) => getPenaltyByRemainingHands(curr) + prev, 0)
 
-    
+    if (isWinner) {
+        return scoreGainedByWinner
+    } else if (suspectAssistant) {
+        return suspectAssistant === seat ? scoreGainedByWinner * -1 : 0
+    } else {
+        return getPenaltyByRemainingHands(gameState.players.find(p => p.seat).hands) * -1
+    }
 }
 
 /**
