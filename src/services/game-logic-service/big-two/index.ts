@@ -81,3 +81,7 @@ export const makeMove = (move: Move) => (gameState: GameState): Effect.Effect<Ga
     Effect.flatMap(Validation.failIfWinnerExists),
     Effect.flatMap(move instanceof Play ? makePlay(move) : makePass(move))
 )
+
+const startNewGame = (gameState: GameState): GameState => pipe(
+
+)

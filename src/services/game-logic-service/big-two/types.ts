@@ -50,6 +50,15 @@ export class Card {
     }
 }
 
+export class Deck {
+    cards: Card[]
+    constructor() {
+        const suits = Suit.getAll()
+        const ranks = Rank.getAll()
+        this.cards = suits.flatMap(suit => ranks.map(rank => new Card(suit, rank)))
+    }
+}
+
 export class Single {
     readonly card: Card
     constructor(card: Card) {
