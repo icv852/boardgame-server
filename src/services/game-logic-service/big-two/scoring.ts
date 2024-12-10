@@ -1,4 +1,3 @@
-import { Option, pipe } from "effect";
 import { Rank, Seat, Suit } from "./constants";
 import { GameState, Card } from "./types";
 
@@ -17,7 +16,7 @@ const getPenaltyByRemainingHands = (hands: Card[]): number => {
 
 export const getGainedOrDeductedScore = (seat: Seat) => (gameState: GameState): number => {
     const isWinner = gameState.current === seat
-    const suspectAssistant = gameState.suspectedAssistance ? Seat.getPrevious(gameState.current) : false
+    const suspectAssistant = gameState.suspectedAssistance ? Seat.getPrevious(gameState.current) : null
 
     const scoreGainedByWinner = gameState.players.map(player => player.hands).reduce((prev, curr) => getPenaltyByRemainingHands(curr) + prev, 0)
 
@@ -29,23 +28,3 @@ export const getGainedOrDeductedScore = (seat: Seat) => (gameState: GameState): 
         return getPenaltyByRemainingHands(gameState.players.find(p => p.seat).hands) * -1
     }
 }
-
-/**
-check ding dai:
-if (nextSeat.card === 1) {
-    if (leadingPlay > 1) {
-        false
-    } else if (leadingPlay === null) {
-        if (play > 1) {
-            false
-        } else {
-            CHECK: play is biggest in hands
-        }
-    } else if (leadingPlay === 1) {
-        CHECK: if play, is play biggest in hands; if pass, is biggest in hands cannot beat leadingPlay
-    }
-} else {
-    false
-}
-
-*/

@@ -2,12 +2,9 @@ import { Effect, Option, pipe } from "effect";
 import { Card, GameState, Move, Pass, Play, Player, Single } from "./types";
 import { GameLogicError } from "../../../utils/errors";
 import { NUM_FULL_HANDS, Rank, Seat, Suit } from "./constants";
+import { getGainedOrDeductedScore } from "./scoring";
 
 const CARD_DIAMOND_3 = new Card(Suit.Diamond, Rank.Three)
-const CARD_SPADE_2 = new Card(Suit.Spade, Rank.Two)
-const CARD_HEART_2 = new Card(Suit.Heart, Rank.Two)
-const CARD_CLUB_2 = new Card(Suit.Club, Rank.Two)
-const CARD_DIAMOND_2 = new Card(Suit.Diamond, Rank.Two)
 
 const getPlayer = (seat: Seat) => (gameState: GameState): Player => gameState.players.find(player => player.seat === seat)
 
@@ -17,14 +14,6 @@ const getWinner = (gameState: GameState): Option.Option<Seat> => pipe(
     gameState.players.find(player => player.hands.length < 1),
     winner => winner ? Option.some(winner.seat) : Option.none()
 )
-
-const getPenaltyByRemainingHands = (hands: Card[]): number => {
-    const numberOfRemainingHands = hands.length
-    const isMoreThanNineCards = numberOfRemainingHands > 9
-    const hasRemainingTwo = [CARD_SPADE_2, CARD_HEART_2, CARD_CLUB_2, CARD_DIAMOND_2].some(card => card.existsIn(hands))
-    const multiplier = (isMoreThanNineCards ? 2 : 1) * (hasRemainingTwo ? 2 : 1)
-    return numberOfRemainingHands * multiplier
-}
 
 const Validation = {
     failIfLeadNotExists: (gameState: GameState): Effect.Effect<GameState, GameLogicError> => pipe(
@@ -60,7 +49,7 @@ const Mutation = {
     resetLeadIfPassToLead: (gameState: GameState): GameState => Seat.getNext(gameState.current) === Option.getOrNull(gameState.lead).seat ? ({ ...gameState, lead: Option.none() }) : gameState,
     assignCurrentToNextSeat: (gameState: GameState): GameState => ({ ...gameState, current: Seat.getNext(gameState.current) }),
     removeCurrentHands: (play: Play) => (gameState: GameState): GameState => Mutation.updatePlayer(p => ({ ...p, hands: p.hands.filter(hand => !play.cards.includes(hand)) }))(gameState.current)(gameState),
-    
+    updateScores: (gameState: GameState): GameState => ({ ...gameState, players: gameState.players.map(p => ({ ...p, score: p.score + getGainedOrDeductedScore(p.seat)(gameState) })) })
 }
 
 const makePass = (pass: Pass) => (gameState: GameState): Effect.Effect<GameState, GameLogicError> => pipe(
@@ -77,7 +66,7 @@ const makePlay = (play: Play) => (gameState: GameState): Effect.Effect<GameState
     Effect.flatMap(Validation.failIfPlayCannotBeatLead(play)),
     Effect.map(Mutation.removeCurrentHands(play)),
     Effect.map(gs => Option.isSome(getWinner(gs))
-        ? pipe(gs, Mutation.updateScores) // TBD
+        ? pipe(gs, Mutation.updateScores)
         : pipe(gs, Mutation.updateSuspectAssistance(play), Mutation.updateLead(play), Mutation.assignCurrentToNextSeat)
     )
 )
