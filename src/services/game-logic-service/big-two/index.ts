@@ -30,6 +30,11 @@ const Validation = {
         Option.flatMap(gs => play.canBeat(Option.getOrThrow(gs.lead)) ? Option.none() : Option.some(gs)),
         Option.map(() => Effect.fail(new GameLogicError("Current play cannot beat the lead."))),
         Option.getOrElse(() => Effect.succeed(gameState))
+    ),
+    failIfWinnerExists: (gameState: GameState): Effect.Effect<GameState, GameLogicError> => pipe(
+        getWinner(gameState),
+        Option.isSome,
+        winnerExists => winnerExists ? Effect.fail(new GameLogicError("Cannot make a move when the game is finished.")) : Effect.succeed(gameState)
     )
 }
 
@@ -69,4 +74,10 @@ const makePlay = (play: Play) => (gameState: GameState): Effect.Effect<GameState
         ? pipe(gs, Mutation.updateScores)
         : pipe(gs, Mutation.updateSuspectAssistance(play), Mutation.updateLead(play), Mutation.assignCurrentToNextSeat)
     )
+)
+
+export const makeMove = (move: Move) => (gameState: GameState): Effect.Effect<GameState, GameLogicError> => pipe(
+    Effect.succeed(gameState),
+    Effect.flatMap(Validation.failIfWinnerExists),
+    Effect.flatMap(move instanceof Play ? makePlay(move) : makePass(move))
 )
