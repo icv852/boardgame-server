@@ -1,6 +1,6 @@
 import { Option } from "effect"
 import { GameLogicError } from "../../../utils/errors"
-import { Suit, Rank, Seat } from "./constants"
+import { Suit, Rank, Seat, NUM_FULL_HANDS } from "./constants"
 
 export class Card {
     readonly suit: Suit
@@ -37,8 +37,8 @@ export class Card {
         return cards.every(card => card.suit === cards[0].suit)
     }
 
-    static getBiggest(cards: Card[]): Card {
-        return cards.reduce((prev, curr) => curr.canBeat(prev) ? curr : prev, new Card(Suit.Diamond, Rank.Three))
+    static getBiggest(cards: Card[]): Option.Option<Card> {
+        return cards.length > 0 ? Option.some(cards.reduce((prev, curr) => curr.canBeat(prev) ? curr : prev, new Card(Suit.Diamond, Rank.Three))) : Option.none()
     }
 
     static sort(cards: Card[]): Card[] {
@@ -50,12 +50,39 @@ export class Card {
     }
 }
 
+export class Hands {
+    value: Card[]
+    constructor(cards: Card[]) {
+        this.value = cards
+    }
+
+    public isEmpty(): boolean {
+        return this.value.length === 0
+    }
+
+    public isLastCard(): boolean {
+        return this.value.length === 1
+    }
+
+    public isFull(): boolean {
+        return this.value.length === NUM_FULL_HANDS
+    }
+
+    public getBiggest(): Option.Option<Card> {
+        return Card.getBiggest(this.value)
+    }
+
+    public remove(play: Play): Hands {
+        return new Hands(this.value.filter(hand => !play.cards.includes(hand)))
+    }
+}
+
 export class Deck {
-    cards: Card[]
+    value: Card[]
     constructor() {
         const suits = Suit.getAll()
         const ranks = Rank.getAll()
-        this.cards = suits.flatMap(suit => ranks.map(rank => new Card(suit, rank)))
+        this.value = suits.flatMap(suit => ranks.map(rank => new Card(suit, rank)))
     }
 }
 
@@ -74,7 +101,7 @@ class Pair {
     readonly pivot: Card
     constructor(cards: Card[]) {
         if (cards.length === 2 && Card.haveSameRank(cards)) {
-            this.pivot = Card.getBiggest(cards)
+            this.pivot = Option.getOrThrow(Card.getBiggest(cards))
         } else {
             throw new GameLogicError("Invalid Pair formation.")
         }
@@ -89,7 +116,7 @@ class Triple {
     readonly pivot: Card
     constructor(cards: Card[]) {
         if (cards.length === 3 && Card.haveSameRank(cards)) {
-            this.pivot = Card.getBiggest(cards)
+            this.pivot = Option.getOrThrow(Card.getBiggest(cards))
         } else {
             throw new GameLogicError("Invalid Triple formation.")
         }
@@ -154,7 +181,7 @@ class Flush {
 
     constructor(cards: Card[]) {
         if (cards.length === 5 && Card.haveSameSuit(cards) && !Straight.haveStraightPattern(cards.map(card => card.rank))) {
-            this.pivot = Card.getBiggest(cards)
+            this.pivot = Option.getOrThrow(Card.getBiggest(cards))
         } else {
             throw new GameLogicError("Invalid Flush formation.")
         }
@@ -222,7 +249,7 @@ class StraightFlush {
     constructor(cards: Card[]) {
         const cardRanks = cards.map(card => card.rank)
         if (cards.length === 5 && Card.haveSameSuit(cards) && Straight.haveStraightPattern(cardRanks)) {
-            this.pivot = Card.getBiggest(cards)
+            this.pivot = Option.getOrThrow(Card.getBiggest(cards))
             if (cardRanks.includes(Rank.Ace) && cardRanks.includes(Rank.Two)) {
                 this.isA2Straight = true
             } else {
@@ -336,7 +363,7 @@ export type Move = Pass | Play
 export interface Player {
     seat: Seat,
     score: number,
-    hands: Card[]
+    hands: Hands,
 }
 
 export interface GameState {

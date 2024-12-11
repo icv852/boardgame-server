@@ -1,17 +1,17 @@
 import { Effect, Option, pipe } from "effect";
 import { Card, GameState, Move, Pass, Play, Player, Single } from "./types";
 import { GameLogicError } from "../../../utils/errors";
-import { NUM_FULL_HANDS, Rank, Seat, Suit } from "./constants";
+import { Rank, Seat, Suit } from "./constants";
 import { getGainedOrDeductedScore } from "./scoring";
 
 const CARD_DIAMOND_3 = new Card(Suit.Diamond, Rank.Three)
 
 const getPlayer = (seat: Seat) => (gameState: GameState): Player => gameState.players.find(player => player.seat === seat)
 
-const getPlayerBiggestHand = (seat: Seat) => (gameState: GameState): Card => Card.getBiggest(getPlayer(seat)(gameState).hands)
+const getPlayerBiggestHand = (seat: Seat) => (gameState: GameState): Option.Option<Card> => getPlayer(seat)(gameState).hands.getBiggest()
 
 const getWinner = (gameState: GameState): Option.Option<Seat> => pipe(
-    gameState.players.find(player => player.hands.length < 1),
+    gameState.players.find(player => player.hands.isEmpty()),
     winner => winner ? Option.some(winner.seat) : Option.none()
 )
 
@@ -21,7 +21,7 @@ const Validation = {
         leadExists => leadExists ? Effect.succeed(gameState) : Effect.fail(new GameLogicError("Cannot pass when the lead doesn't exist."))
     ),
     failIfFirstPlayNotIncludeDiamond3: (play: Play) => (gameState: GameState): Effect.Effect<GameState, GameLogicError> => pipe(
-        !gameState.players.some(player => player.hands.length < NUM_FULL_HANDS),
+        !gameState.players.some(player => !player.hands.isFull()),
         isFirstPlay => isFirstPlay && play.cards.some(card => Card.isSame([card, CARD_DIAMOND_3])) ? Effect.succeed(gameState) : Effect.fail(new GameLogicError("First play must include Diamond 3."))
     ),
     failIfPlayCannotBeatLead: (play: Play) => (gameState: GameState): Effect.Effect<GameState, GameLogicError> => pipe(
@@ -41,11 +41,11 @@ const Validation = {
 const Mutation = {
     updateSuspectAssistance: (move: Move) => (gameState: GameState): GameState => pipe(
         Option.some(gameState),
-        Option.flatMap(gs => getPlayer(Seat.getNext(gs.current))(gs).hands.length === 1 ? Option.some(gs) : Option.none()),
+        Option.flatMap(gs => getPlayer(Seat.getNext(gs.current))(gs).hands.isLastCard() ? Option.some(gs) : Option.none()),
         Option.flatMap(gs => (Option.some(gs.lead) && !(Option.getOrThrow(gs.lead) instanceof Single)) ? Option.none() : Option.some(gs)),
         Option.flatMap(gs => move instanceof Play && !(move.value instanceof Single) ? Option.none() : Option.some(gs)),
-        Option.flatMap(gs => move instanceof Play && (move.value instanceof Single) && Card.isSame([getPlayerBiggestHand(gs.current)(gs), move.value.card]) ? Option.none() : Option.some(gs)),
-        Option.flatMap(gs => move instanceof Pass && (Option.getOrNull(gs.lead) instanceof Single) && !getPlayerBiggestHand(gs.current)(gs).canBeat((Option.getOrThrow(gs.lead).value as Single).card) ? Option.none() : Option.some(gs)),
+        Option.flatMap(gs => move instanceof Play && (move.value instanceof Single) && Card.isSame([Option.getOrThrow(getPlayerBiggestHand(gs.current)(gs)), move.value.card]) ? Option.none() : Option.some(gs)),
+        Option.flatMap(gs => move instanceof Pass && (Option.getOrNull(gs.lead) instanceof Single) && !Option.getOrThrow(getPlayerBiggestHand(gs.current)(gs)).canBeat((Option.getOrThrow(gs.lead).value as Single).card) ? Option.none() : Option.some(gs)),
         Option.map(gs => ({ ...gs, suspectedAssistance: true })),
         Option.getOrElse(() => ({ ...gameState, suspectedAssistance: false}))
     ),
@@ -53,7 +53,7 @@ const Mutation = {
     updatePlayer: (updater: (player: Player) => Player) => (seat: Seat) => (gameState: GameState): GameState => ({ ...gameState, players: gameState.players.map(p => p.seat === seat ? updater(p) : p) }),
     resetLeadIfPassToLead: (gameState: GameState): GameState => Seat.getNext(gameState.current) === Option.getOrNull(gameState.lead).seat ? ({ ...gameState, lead: Option.none() }) : gameState,
     assignCurrentToNextSeat: (gameState: GameState): GameState => ({ ...gameState, current: Seat.getNext(gameState.current) }),
-    removeCurrentHands: (play: Play) => (gameState: GameState): GameState => Mutation.updatePlayer(p => ({ ...p, hands: p.hands.filter(hand => !play.cards.includes(hand)) }))(gameState.current)(gameState),
+    removeCurrentHands: (play: Play) => (gameState: GameState): GameState => Mutation.updatePlayer(p => ({ ...p, hands: p.hands.remove(play) }))(gameState.current)(gameState),
     updateScores: (gameState: GameState): GameState => ({ ...gameState, players: gameState.players.map(p => ({ ...p, score: p.score + getGainedOrDeductedScore(p.seat)(gameState) })) })
 }
 
