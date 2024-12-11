@@ -1,7 +1,5 @@
 import { Option } from "effect"
 
-export const NUM_FULL_HANDS = 13
-
 export enum Suit {
     Diamond = 0,
     Club,

@@ -1,6 +1,6 @@
 import { Option } from "effect"
 import { GameLogicError } from "../../../utils/errors"
-import { Suit, Rank, Seat, NUM_FULL_HANDS } from "./constants"
+import { Suit, Rank, Seat } from "./constants"
 
 export class Card {
     readonly suit: Suit
@@ -52,6 +52,8 @@ export class Card {
 
 export class Hands {
     value: Card[]
+    static NUM_FULL_SIZE = 13
+
     constructor(cards: Card[]) {
         this.value = cards
     }
@@ -65,7 +67,7 @@ export class Hands {
     }
 
     public isFull(): boolean {
-        return this.value.length === NUM_FULL_HANDS
+        return this.value.length === Hands.NUM_FULL_SIZE
     }
 
     public getBiggest(): Option.Option<Card> {
@@ -78,11 +80,32 @@ export class Hands {
 }
 
 export class Deck {
-    value: Card[]
+    private value: Card[]
     constructor() {
         const suits = Suit.getAll()
         const ranks = Rank.getAll()
         this.value = suits.flatMap(suit => ranks.map(rank => new Card(suit, rank)))
+    }
+
+    private shuffle(): void {
+        const shuffled = [...this.value]
+
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        this.value = shuffled
+    }
+
+    private chunk(cards: Card[]): Card[][] {
+        if (cards.length === 0) return []
+        return [cards.slice(0, Hands.NUM_FULL_SIZE)].concat(this.chunk(cards.slice(Hands.NUM_FULL_SIZE)))
+    }
+
+    public deliverHands(): Hands[] {
+        this.shuffle()
+        return this.chunk(this.value).map(cards => new Hands(cards))
     }
 }
 
