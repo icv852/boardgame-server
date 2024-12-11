@@ -392,6 +392,7 @@ export class Pass {
 export type Move = Pass | Play
 
 export interface Player {
+    id: string,
     seat: Seat,
     score: number,
     hands: Hands,

@@ -1,5 +1,5 @@
 import { Effect, Option, pipe } from "effect";
-import { Card, Deck, GameState, Move, Pass, Play, Player, Single } from "./types";
+import { Card, Deck, GameState, Hands, Move, Pass, Play, Player, Single } from "./types";
 import { GameLogicError } from "../../../utils/errors";
 import { Rank, Seat, Suit } from "./constants";
 import { getGainedOrDeductedScore } from "./scoring";
@@ -97,3 +97,15 @@ export const startNewGame = (gameState: GameState): GameState => pipe(
     Mutation.deliverHands,
     Mutation.assignCurrentToDiamond3Holder,
 )
+
+export const initiateGameState = (playerIds: string[]): GameState => ({
+    players: playerIds.map((id, index) => ({
+        id,
+        seat: index,
+        score: 0,
+        hands: new Hands([])
+    })),
+    current: Seat.East,
+    lead: Option.none(),
+    suspectedAssistance: false,
+})
