@@ -77,6 +77,14 @@ export class Hands {
     public remove(play: Play): Hands {
         return new Hands(this.value.filter(hand => !play.cards.includes(hand)))
     }
+
+    public hasCard(card: Card): boolean {
+        return card.existsIn(this.value)
+    }
+
+    public getHandsNum(): number {
+        return this.value.length
+    }
 }
 
 export class Deck {

@@ -1,5 +1,5 @@
 import { Effect, Option, pipe } from "effect";
-import { Card, GameState, Move, Pass, Play, Player, Single } from "./types";
+import { Card, Deck, GameState, Move, Pass, Play, Player, Single } from "./types";
 import { GameLogicError } from "../../../utils/errors";
 import { Rank, Seat, Suit } from "./constants";
 import { getGainedOrDeductedScore } from "./scoring";
@@ -51,10 +51,18 @@ const Mutation = {
     ),
     updateLead: (play: Play) => (gameState: GameState): GameState => ({ ...gameState, lead: Option.some(play) }),
     updatePlayer: (updater: (player: Player) => Player) => (seat: Seat) => (gameState: GameState): GameState => ({ ...gameState, players: gameState.players.map(p => p.seat === seat ? updater(p) : p) }),
+    resetLead: (gameState: GameState): GameState => ({ ...gameState, lead: Option.none() }),
+    resetSuspectAssistance: (gameState: GameState): GameState => ({ ...gameState, suspectedAssistance: false }),
     resetLeadIfPassToLead: (gameState: GameState): GameState => Seat.getNext(gameState.current) === Option.getOrNull(gameState.lead).seat ? ({ ...gameState, lead: Option.none() }) : gameState,
     assignCurrentToNextSeat: (gameState: GameState): GameState => ({ ...gameState, current: Seat.getNext(gameState.current) }),
+    assignCurrentToDiamond3Holder: (gameState: GameState): GameState => ({ ...gameState, current: gameState.players.find(p => p.hands.hasCard(CARD_DIAMOND_3)).seat }),
     removeCurrentHands: (play: Play) => (gameState: GameState): GameState => Mutation.updatePlayer(p => ({ ...p, hands: p.hands.remove(play) }))(gameState.current)(gameState),
-    updateScores: (gameState: GameState): GameState => ({ ...gameState, players: gameState.players.map(p => ({ ...p, score: p.score + getGainedOrDeductedScore(p.seat)(gameState) })) })
+    updateScores: (gameState: GameState): GameState => ({ ...gameState, players: gameState.players.map(p => ({ ...p, score: p.score + getGainedOrDeductedScore(p.seat)(gameState) })) }),
+    deliverHands: (gameState: GameState): GameState => ({ ...gameState, players: (() => { 
+        const deck = new Deck()
+        const handsArray = deck.deliverHands()
+        return gameState.players.map((p, i) => ({ ...p, hands: handsArray[i] }))
+    })() }),
 }
 
 const makePass = (pass: Pass) => (gameState: GameState): Effect.Effect<GameState, GameLogicError> => pipe(
@@ -82,6 +90,10 @@ export const makeMove = (move: Move) => (gameState: GameState): Effect.Effect<Ga
     Effect.flatMap(move instanceof Play ? makePlay(move) : makePass(move))
 )
 
-const startNewGame = (gameState: GameState): GameState => pipe(
-
+export const startNewGame = (gameState: GameState): GameState => pipe(
+    gameState,
+    Mutation.resetLead,
+    Mutation.resetSuspectAssistance,
+    Mutation.deliverHands,
+    Mutation.assignCurrentToDiamond3Holder,
 )
