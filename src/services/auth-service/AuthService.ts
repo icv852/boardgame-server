@@ -4,7 +4,7 @@ import { AuthenticationError, InternalError } from "../../utils/errors"
 import DatabaseService from "../database-service/DatabaseService"
 import { User } from "@prisma/client"
 import { AtLeastOne } from "../../utils/generics"
-import { hashPassword } from "../../utils/helpers"
+import bcrypt from "bcrypt"
 
 export default class AuthService {
     private databaseService: DatabaseService
@@ -18,6 +18,22 @@ export default class AuthService {
             return new AuthService(databaseService)
         } catch (e) {
             throw new InternalError(`Failed to initiate AuthService: ${e}.`)
+        }
+    }
+
+    static hashPassword(password: string): Effect.Effect<string, InternalError> {
+        return Effect.tryPromise({
+            try: () => bcrypt.hash(password, 10),
+            catch: (e) => new InternalError(`Failed to hash password: ${e}`)
+        })
+    }
+    
+    static checkPassword(hash: string) {
+        return (password: string): Effect.Effect<boolean, InternalError> => {
+            return Effect.tryPromise({
+                try: () => bcrypt.compare(password, hash),
+                catch: (e) => new InternalError(`Failed to check password: ${e}`)
+            })
         }
     }
 
@@ -35,7 +51,7 @@ export default class AuthService {
             Effect.flatMap(user => Option.isSome(user) ? Effect.fail(new AuthenticationError(`Failed to create user. Username [${data.username}] has been used.`)) : Effect.void),
             Effect.flatMap(() => this.databaseService.getUser({ email: data.email })),
             Effect.flatMap(user => Option.isSome(user) ? Effect.fail(new AuthenticationError(`Failed to create user. Email [${data.email}] has been used.`)) : Effect.void),
-            Effect.flatMap(() => Effect.promise(() => hashPassword(data.password))),
+            Effect.flatMap(() => AuthService.hashPassword(data.password)),
             Effect.map(passwordHash => ({ username: data.username, email: data.email, passwordHash })),
             Effect.flatMap(user => this.databaseService.createUser(user))
         )

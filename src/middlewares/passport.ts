@@ -3,7 +3,6 @@ import { User } from "@prisma/client"
 import localStrategy from "passport-local"
 import { Effect } from "effect"
 import AuthService from "../services/auth-service/AuthService"
-import { checkPassword } from "../utils/helpers"
 
 const LocalStrategy = localStrategy.Strategy
 
@@ -28,7 +27,7 @@ const passportMiddleware = (authService: AuthService) => {
                 }
             },
             onSuccess: async (user) => {
-                const isPasswordMatch = await checkPassword(password, user.passwordHash)
+                const isPasswordMatch = await Effect.runPromise(AuthService.checkPassword(user.passwordHash)(password))
                 if (username === user.username && isPasswordMatch) {
                     return done(null, user)
                 } else {
