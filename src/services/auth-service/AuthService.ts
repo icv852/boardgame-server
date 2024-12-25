@@ -37,7 +37,7 @@ export default class AuthService {
         }
     }
 
-    public getUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Effect.Effect<User, AuthenticationError | InternalError, DatabaseService> {
+    public getUser(where: AtLeastOne<Pick<User, "id"| "username" | "email">>): Effect.Effect<User, AuthenticationError | InternalError> {
         return pipe(
             this.databaseService.getUser(where),
             Effect.flatten,
@@ -45,7 +45,7 @@ export default class AuthService {
         )
     }
 
-    public createUser(data: Pick<User, "username" | "email"> & { password: string }): Effect.Effect<User, AuthenticationError | InternalError, DatabaseService> {
+    public createUser(data: Pick<User, "username" | "email"> & { password: string }): Effect.Effect<User, AuthenticationError | InternalError> {
         return pipe(
             this.databaseService.getUser({ username: data.username }),
             Effect.flatMap(user => Option.isSome(user) ? Effect.fail(new AuthenticationError(`Failed to create user. Username [${data.username}] has been used.`)) : Effect.void),
@@ -57,7 +57,7 @@ export default class AuthService {
         )
     }
 
-    public updateUser(where: AtLeastOne<Pick<User, "id" | "username" | "email">>, data: Partial<Pick<User, "username" | "email"> & { password: string }>): Effect.Effect<User, AuthenticationError | InternalError, DatabaseService> {
+    public updateUser(where: AtLeastOne<Pick<User, "id" | "username" | "email">>, data: Partial<Pick<User, "username" | "email"> & { password: string }>): Effect.Effect<User, AuthenticationError | InternalError> {
         return pipe(
             this.databaseService.getUser(where),
             Effect.flatten,

@@ -3,6 +3,7 @@ import { User } from "@prisma/client"
 import localStrategy from "passport-local"
 import { Effect } from "effect"
 import AuthService from "../services/auth-service/AuthService"
+import { Context, Next } from "koa"
 
 const LocalStrategy = localStrategy.Strategy
 
@@ -37,7 +38,7 @@ const passportMiddleware = (authService: AuthService) => {
         }))
     }))
 
-    return async (ctx, next) => {
+    return async (ctx: Context, next: Next) => {
         await passport.initialize()(ctx, async () => {
             await passport.session()(ctx, next)
         })
