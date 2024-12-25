@@ -1,9 +1,9 @@
 
 import { Effect, Option, pipe } from "effect"
-import { AuthenticationError, InternalError } from "../../utils/errors"
+import { AuthenticationError, InternalError } from "../../types/error"
 import DatabaseService from "../database-service/DatabaseService"
 import { User } from "@prisma/client"
-import { AtLeastOne } from "../../utils/generics"
+import { AtLeastOne } from "../../types/generic"
 import bcrypt from "bcrypt"
 
 export default class AuthService {

@@ -1,6 +1,6 @@
 import { Effect, Option, pipe } from "effect";
 import { Card, Deck, GameState, Hands, Move, Pass, Play, Player, Single } from "./types";
-import { GameLogicError } from "../../../utils/errors";
+import { GameLogicError } from "../../../types/error";
 import { Rank, Seat, Suit } from "./constants";
 import { getGainedOrDeductedScore } from "./scoring";
 

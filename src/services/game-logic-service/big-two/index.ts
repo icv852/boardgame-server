@@ -1,6 +1,6 @@
 import { Effect, pipe } from "effect";
 import { GameState, Move, Play } from "./types";
-import { GameLogicError } from "../../../utils/errors";
+import { GameLogicError } from "../../../types/error";
 import { Validation, Mutation, makePass, makePlay, getFreshGameState } from "./functions";
 
 export const makeMove = (move: Move) => (gameState: GameState): Effect.Effect<GameState, GameLogicError> => pipe(

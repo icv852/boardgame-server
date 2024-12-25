@@ -1,7 +1,7 @@
 import { PrismaClient, User } from "@prisma/client";
-import { InternalError } from "../../utils/errors";
+import { InternalError } from "../../types/error";
 import { Effect, Option } from "effect";
-import { AtLeastOne } from "../../utils/generics";
+import { AtLeastOne } from "../../types/generic";
 
 export default class DatabaseService {
     private db: PrismaClient

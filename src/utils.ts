@@ -1,6 +1,6 @@
 import { Effect, pipe } from "effect";
 import { Context } from "koa";
-import { AuthenticationError, InternalError } from "./utils/errors";
+import { AuthenticationError, InternalError } from "./types/error";
 
 export const emitHttpResponseByEffect = async (ctx: Context, effect: Effect.Effect<any, AuthenticationError | InternalError>) => {
     (await pipe(

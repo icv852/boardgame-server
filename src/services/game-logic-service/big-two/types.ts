@@ -1,5 +1,5 @@
 import { Option } from "effect"
-import { GameLogicError } from "../../../utils/errors"
+import { GameLogicError } from "../../../types/error"
 import { Suit, Rank, Seat } from "./constants"
 
 export class Card {
