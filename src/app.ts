@@ -8,9 +8,9 @@ import AuthService from "./services/auth-service/AuthService"
 export default function createKoaApp(authService: AuthService) {
     const app = new Koa()
     app.use(bodyParser())
-    app.use(routerMiddleware(authService))
     app.use(sessionMiddleware(app))
     app.use(passportMiddleware(authService))
+    app.use(routerMiddleware(authService))
 
     return app
 }
